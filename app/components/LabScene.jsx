@@ -8,20 +8,20 @@ import styles from './LabScene.module.css';
 
 const hotspotsData = [
   {
-    title: 'Nothing',
-    text: 'Große Dinge beginnen mit dem Mut, anzufangen.',
+    title: 'Workshop & Strategie',
+    text: 'Wir starten keine Projekte ohne Workshop.\nNicht, weil es „State of the Art" ist – sondern weil es die einzige Art ist, fundierte Entscheidungen zu treffen.\n\nIm Workshop klären wir, für wen wir arbeiten, was erreicht werden soll und woran wir Erfolg messen. Wir hören zu, fragen nach und strukturieren. Keine Show, keine Methoden um der Methode willen. Am Ende steht ein gemeinsames Bild – und eine klare Richtung.',
   },
   {
-    title: 'great is',
-    text: 'Großartigkeit entsteht durch Ausdauer und Leidenschaft.',
+    title: 'Konzept & Branding',
+    text: 'Wir entwickeln Marken, die nicht nur gut aussehen, sondern auch Orientierung geben und langfristig funktionieren. Nach innen wie nach außen.\n\nBranding beginnt für uns bei Haltung, Kontext und Ziel. Erst wenn klar ist, wofür ein Produkt oder Unternehmen steht, übersetzen wir das in Struktur, Sprache und Gestaltung.',
   },
   {
-    title: 'made',
-    text: 'Jedes Meisterwerk ist das Ergebnis unzähliger kleiner Entscheidungen.',
+    title: 'UX / UI Design',
+    text: 'Wir gestalten Oberflächen, die Entscheidungen für Nutzer*innen und für Teams erleichtern und komplexe Inhalte verständlich machen.\nDabei denken wir Design immer im Zusammenspiel von Inhalt, Funktion und technischer Realität.\n\nKlare Strukturen, nachvollziehbare Flows und Systeme, die auch in der Weiterentwicklung Bestand haben, sind bei uns Standard.',
   },
   {
-    title: 'alone',
-    text: 'Die besten Werke entstehen im Miteinander — nicht im Alleingang.',
+    title: 'Development',
+    text: 'Wir setzen digitale Lösungen technisch sauber und nachhaltig um.\nVon Websites bis zu komplexeren digitalen Anwendungen – immer mit Blick auf Performance, Wartbarkeit und Weiterentwicklung.\nDamit aus Konzepten funktionierende Produkte werden.',
   },
 ];
 
@@ -426,7 +426,10 @@ export default function LabScene() {
   return (
     <main className={styles.stage}>
       <canvas ref={canvasRef} className={styles.canvas} />
-      <h1 className={styles.sceneTitle}>Das Stadtteilliebe-Sonnensystem</h1>
+      <div className={styles.heroBlock}>
+        <h1 className={styles.heroTitle}>Von Anfang an in der richtigen Umlaufbahn</h1>
+        <p className={styles.heroText}>Gute digitale Produkte entstehen nicht zufällig, sie kreisen um einen gemeinsamen Kern. Wir bringen diese Ausrichtung in Projekte und Organisationen. Strukturiert, kollaborativ und ohne Umwege. Das Ergebnis: Produkte, die intuitiv funktionieren – für Menschen, Teams und Unternehmen.</p>
+      </div>
 
       {hotspotsData.map((h, i) => (
         <span
