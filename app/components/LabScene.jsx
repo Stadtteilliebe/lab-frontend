@@ -427,7 +427,7 @@ export default function LabScene() {
     <main className={styles.stage}>
       <canvas ref={canvasRef} className={styles.canvas} />
       <div className={styles.heroBlock}>
-        <h1 className={styles.heroTitle}>Von Anfang an in der richtigen Umlaufbahn</h1>
+        <h1 className={styles.heroTitle}>Von Anfang an auf der richtigen Umlaufbahn</h1>
         <p className={styles.heroText}>Gute digitale Produkte entstehen nicht zufällig, sie kreisen um einen gemeinsamen Kern. Wir bringen diese Ausrichtung in Projekte und Organisationen. Strukturiert, kollaborativ und ohne Umwege. Das Ergebnis: Produkte, die intuitiv funktionieren – für Menschen, Teams und Unternehmen.</p>
       </div>
 
