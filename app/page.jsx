@@ -1,5 +1,5 @@
-import LabScene from './components/LabScene';
+import ScrollStory from './components/ScrollStory';
 
 export default function Home() {
-  return <LabScene />;
+  return <ScrollStory />;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
@@ -9,7 +9,7 @@ import styles from './LabScene.module.css';
 const hotspotsData = [
   {
     title: 'Workshop & Strategie',
-    text: 'Wir starten keine Projekte ohne Workshop.\nNicht, weil es „State of the Art" ist – sondern weil es die einzige Art ist, fundierte Entscheidungen zu treffen.\n\nIm Workshop klären wir, für wen wir arbeiten, was erreicht werden soll und woran wir Erfolg messen. Wir hören zu, fragen nach und strukturieren. Keine Show, keine Methoden um der Methode willen. Am Ende steht ein gemeinsames Bild – und eine klare Richtung.',
+    text: 'Wir starten keine Projekte ohne Workshop.\nNicht, weil es „State of the Art" ist – sondern weil es die einzige Art ist, fundierte Entscheidungen zu treffen.\n\nIm Workshop klären wir, für wen wir arbeiten, was erreicht werden soll und woran wir Erfolg messen. Wir hören zu, fragen nach und strukturieren. Am Ende steht ein gemeinsames Bild – und eine klare Richtung.',
   },
   {
     title: 'Konzept & Branding',
@@ -25,39 +25,41 @@ const hotspotsData = [
   },
 ];
 
-// Sorted outer → inner so index 0 = outermost ring ("Nothing", 1 von 4)
 const orbitsConfig = [
-  { radius: 6.3, tiltX:  0.75, tiltZ:  0.08, speed: 0.055, startAngle: 4.0 },
-  { radius: 4.9, tiltX:  0.20, tiltZ:  0.45, speed: 0.085, startAngle: 5.6 },
-  { radius: 3.6, tiltX:  0.60, tiltZ: -0.22, speed: 0.13,  startAngle: 3.8 },
-  { radius: 2.2, tiltX:  0.30, tiltZ:  0.18, speed: 0.22,  startAngle: 0.9 },
+  { radius: 6.3, tiltX: 0.75, tiltZ:  0.08, speed: 0.055, startAngle: 4.0 },
+  { radius: 4.9, tiltX: 0.20, tiltZ:  0.45, speed: 0.085, startAngle: 5.6 },
+  { radius: 3.6, tiltX: 0.60, tiltZ: -0.22, speed: 0.13,  startAngle: 3.8 },
+  { radius: 2.2, tiltX: 0.30, tiltZ:  0.18, speed: 0.22,  startAngle: 0.9 },
 ];
 
-export default function LabScene() {
+export default function LabScene({ sceneStep = 0, selectedPlanet, onPlanetClick }) {
+  const containerRef      = useRef(null);
   const canvasRef         = useRef(null);
-  const panelRef          = useRef(null);
   const sceneApiRef       = useRef(null);
-  const moveToRef         = useRef(null);
-  const hotspotMeshesRef  = useRef([]);
-  const labelRefsArr      = useRef([]);
   const selectedPlanetRef = useRef(null);
-  const frozenAllRef      = useRef(false);
-  const triggerIntroRef   = useRef(null);
-  const [panel, setPanel] = useState(null);
-  const [panelIndex, setPanelIndex] = useState(0);
+  const labelRefsArr      = useRef([]);
+  const onPlanetClickRef  = useRef(onPlanetClick);
 
+  // Keep callback ref fresh without re-running the Three.js effect
+  useEffect(() => { onPlanetClickRef.current = onPlanetClick; });
+
+  // ── Three.js scene setup ──────────────────────────────────────────────────
   useEffect(() => {
-    if (!canvasRef.current) return undefined;
+    if (!canvasRef.current || !containerRef.current) return undefined;
 
-    const canvas = canvasRef.current;
-    const scene  = new THREE.Scene();
+    const canvas    = canvasRef.current;
+    const container = containerRef.current;
+    const w = container.clientWidth  || window.innerWidth / 2;
+    const h = container.clientHeight || window.innerHeight;
+
+    const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x06060a);
 
-    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 1000);
     camera.position.set(0, 2, 20);
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(w, h, false);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.1;
@@ -77,15 +79,10 @@ export default function LabScene() {
     controls.autoRotateSpeed = 0.3;
     controls.minDistance     = 4;
     controls.maxDistance     = 32;
-    controls.mouseButtons    = {
-      LEFT: THREE.MOUSE.ROTATE,
-      MIDDLE: THREE.MOUSE.PAN,
-      RIGHT: THREE.MOUSE.DOLLY,
-    };
+    controls.mouseButtons    = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.DOLLY };
     controls.update();
 
-    const stopAutoRotate = () => { controls.autoRotate = false; };
-    renderer.domElement.addEventListener('pointerdown', stopAutoRotate);
+    renderer.domElement.addEventListener('pointerdown', () => { controls.autoRotate = false; });
 
     // Lighting
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
@@ -93,31 +90,20 @@ export default function LabScene() {
     keyLight.position.set(8, 10, 6);
     scene.add(keyLight);
 
-    // ── Central sun ──────────────────────────────────────────────────────────
+    // Sun
     const sunGeo = new THREE.SphereGeometry(0.22, 32, 32);
-    const sunMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      emissive: 0xffffff,
-      emissiveIntensity: 2.0,
-      roughness: 1,
-      metalness: 0,
-    });
-    const sunMesh = new THREE.Mesh(sunGeo, sunMat);
-    scene.add(sunMesh);
+    const sunMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2.0, roughness: 1, metalness: 0 });
+    scene.add(new THREE.Mesh(sunGeo, sunMat));
 
-    // ── Orbit rings + planets ────────────────────────────────────────────────
-    const hotspotMeshes = [];
-    const ringMeshes    = [];
-    const orbitAngles   = orbitsConfig.map((o) => o.startAngle);
+    // Orbit rings + planets
+    const hotspotMeshes  = [];
+    const ringMeshes     = [];
+    const orbitAngles    = orbitsConfig.map(o => o.startAngle);
     const ringGeometries = [];
     const ringMaterials  = [];
 
     const getOrbitPos = (cfg, angle) => {
-      const local = new THREE.Vector3(
-        Math.cos(angle) * cfg.radius,
-        Math.sin(angle) * cfg.radius,
-        0,
-      );
+      const local = new THREE.Vector3(Math.cos(angle) * cfg.radius, Math.sin(angle) * cfg.radius, 0);
       local.applyEuler(new THREE.Euler(cfg.tiltX, 0, cfg.tiltZ, 'XZY'));
       return local;
     };
@@ -129,42 +115,29 @@ export default function LabScene() {
         pts.push(new THREE.Vector3(Math.cos(a) * cfg.radius, Math.sin(a) * cfg.radius, 0));
       }
       const ringGeo = new THREE.BufferGeometry().setFromPoints(pts);
-      const ringMat = new THREE.LineBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: 0.55,
-        linewidth: 2,
-      });
+      const ringMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: i === 0 ? 0.55 : 0 });
       ringGeometries.push(ringGeo);
       ringMaterials.push(ringMat);
-
       const ring = new THREE.LineLoop(ringGeo, ringMat);
       ring.rotation.set(cfg.tiltX, 0, cfg.tiltZ, 'XZY');
       scene.add(ring);
       ringMeshes.push(ring);
 
-      // Planet — depthWrite: true so it fully occludes the orbit lines behind it
       const planetGeo = new THREE.SphereGeometry(0.15, 32, 32);
-      const planetMat = new THREE.MeshBasicMaterial({
-        color: 0xBAA2F9,
-        transparent: false,
-        depthWrite: true,
-        opacity: 1,
-      });
+      const planetMat = new THREE.MeshBasicMaterial({ color: 0xBAA2F9, transparent: true, depthWrite: true, opacity: 0 });
       const planet = new THREE.Mesh(planetGeo, planetMat);
       planet.renderOrder = 1;
       planet.userData = { title: hotspotsData[i].title, text: hotspotsData[i].text };
-      planet.raycast   = () => {};
+      planet.visible = false;
       planet.position.copy(getOrbitPos(cfg, orbitAngles[i]));
       scene.add(planet);
       hotspotMeshes.push(planet);
     });
 
-    hotspotMeshesRef.current = hotspotMeshes;
-
-    // ── Fade helpers ─────────────────────────────────────────────────────────
-    const fadeMaterial = (mat, from, to, duration, onDone) => {
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    const fadeMat = (mat, from, to, duration, onDone) => {
       const start = performance.now();
+      mat.opacity = from;
       const tick = () => {
         const t = Math.min((performance.now() - start) / duration, 1);
         const e = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
@@ -175,172 +148,121 @@ export default function LabScene() {
       tick();
     };
 
-    // ── Initial fade-in ───────────────────────────────────────────────────────
-    const revealHotspots = () => {
-      hotspotMeshes.forEach((m) => { m.raycast = THREE.Mesh.prototype.raycast.bind(m); });
-      hotspotMeshes.forEach((m) => { m.material.opacity = 1; });
-    };
-    setTimeout(revealHotspots, 600);
-
-    // ── Camera animation ─────────────────────────────────────────────────────
-    let savedCamPos = null;
-    let savedTarget = null;
-
-    const animateCamera = (fromPos, fromTarget, toPos, toTarget, duration, onDone) => {
-      const startTime = performance.now();
-      controls.enabled = false;
-      const step = () => {
-        const elapsed = performance.now() - startTime;
-        const t    = Math.min(elapsed / duration, 1);
-        const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-        camera.position.lerpVectors(fromPos, toPos, ease);
-        controls.target.lerpVectors(fromTarget, toTarget, ease);
-        controls.update();
-        if (t < 1) requestAnimationFrame(step);
-        else { controls.enabled = true; if (onDone) onDone(); }
-      };
-      step();
-    };
-
-    const moveTo = (targetPos) => {
-      const dir       = camera.position.clone().sub(controls.target).normalize();
-      const newCamPos = targetPos.clone().add(dir.multiplyScalar(3.5));
-      animateCamera(
-        camera.position.clone(), controls.target.clone(),
-        newCamPos, targetPos.clone(),
-        900,
-      );
-    };
-
-    const zoomToPoint = (targetPos) => {
-      savedCamPos = camera.position.clone();
-      savedTarget = controls.target.clone();
-      moveTo(targetPos);
-    };
-
-    const zoomBack = () => {
-      if (!savedCamPos || !savedTarget) return;
-      animateCamera(camera.position.clone(), controls.target.clone(), savedCamPos, savedTarget, 900);
-      savedCamPos = null;
-      savedTarget = null;
-    };
-
     const defaultCamPos = new THREE.Vector3(0, 2, 20);
     const defaultTarget = new THREE.Vector3(0, 0, 0);
 
+    const animateCam = (fromPos, fromTarget, toPos, toTarget, duration, onDone) => {
+      const startTime = performance.now();
+      controls.enabled = false;
+      const tick = () => {
+        const t = Math.min((performance.now() - startTime) / duration, 1);
+        const e = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        camera.position.lerpVectors(fromPos, toPos, e);
+        controls.target.lerpVectors(fromTarget, toTarget, e);
+        controls.update();
+        if (t < 1) requestAnimationFrame(tick);
+        else { controls.enabled = true; if (onDone) onDone(); }
+      };
+      tick();
+    };
+
+    const moveTo = (targetPos) => {
+      const dir = camera.position.clone().sub(controls.target).normalize();
+      animateCam(camera.position.clone(), controls.target.clone(), targetPos.clone().add(dir.multiplyScalar(3.5)), targetPos.clone(), 900);
+    };
+
     const resetCamera = () => {
-      animateCamera(
-        camera.position.clone(), controls.target.clone(),
-        defaultCamPos.clone(), defaultTarget.clone(),
-        900,
-      );
-      savedCamPos = null;
-      savedTarget = null;
+      animateCam(camera.position.clone(), controls.target.clone(), defaultCamPos.clone(), defaultTarget.clone(), 900);
     };
 
-    // ── Intro sequence (triggered by clicking the center sun) ─────────────────
-    const triggerIntro = () => {
-      // Reset state
-      selectedPlanetRef.current = null;
-      frozenAllRef.current      = true;
-      savedCamPos = null;
-      savedTarget = null;
-      controls.autoRotate = false;
+    // ── Scene step transitions ────────────────────────────────────────────────
+    let currentStep = -1;
 
-      // Close panel via React
-      setPanel(null);
+    const transitionToStep = (newStep) => {
+      const prev = currentStep;
+      currentStep = newStep;
 
-      // Animate camera to top-down view
-      const topPos    = new THREE.Vector3(0, 18, 1);
-      const topTarget = new THREE.Vector3(0, 0, 0);
-      animateCamera(
-        camera.position.clone(), controls.target.clone(),
-        topPos, topTarget,
-        1200,
-      );
+      if (newStep === 0) {
+        ringMeshes[0].material.opacity = 0.55;
+        [1, 2, 3].forEach(ri => { ringMeshes[ri].material.opacity = 0; });
+        hotspotMeshes.forEach(m => { m.visible = false; m.material.opacity = 0; });
+        selectedPlanetRef.current = null;
+        onPlanetClickRef.current?.(null);
+        controls.autoRotate = true;
+        resetCamera();
 
-      // Immediately hide all planets, rings and sun
-      hotspotMeshes.forEach((m) => {
-        m.material.opacity = 0;
-        m.raycast = () => {};
-      });
-      ringMeshes.forEach((r) => { r.material.opacity = 0; });
-      sunMat.opacity = 0;
-      sunMat.transparent = true;
-
-      // Staggered reveal outer → inner, sun last
-      const baseDelay = 1300;
-      const stepDelay = 600;
-      const n = hotspotMeshes.length;
-
-      for (let step = 0; step < n; step++) {
-        const i = step; // index 0 = outermost (Nothing) → index 3 = innermost (alone)
-        setTimeout(() => {
-          fadeMaterial(ringMeshes[i].material, 0, 0.55, 350);
-          const mesh = hotspotMeshes[i];
-          fadeMaterial(mesh.material, 0, 1, 350, () => {
-            mesh.raycast = THREE.Mesh.prototype.raycast.bind(mesh);
+      } else if (newStep === 1) {
+        controls.autoRotate = true;
+        if (prev < 1) {
+          // Forward: stagger rings 1–3 in
+          [1, 2, 3].forEach((ri, idx) => {
+            setTimeout(() => fadeMat(ringMeshes[ri].material, 0, 0.55, 700), idx * 450);
           });
-        }, baseDelay + step * stepDelay);
+        } else {
+          // Backward: hide planets
+          hotspotMeshes.forEach(m => { m.visible = false; m.material.opacity = 0; });
+          selectedPlanetRef.current = null;
+          onPlanetClickRef.current?.(null);
+          resetCamera();
+        }
+
+      } else if (newStep === 2) {
+        controls.autoRotate = false;
+        ringMeshes.forEach(r => { r.material.opacity = 0.55; });
+        if (prev < 2) {
+          hotspotMeshes.forEach((m, i) => {
+            m.visible = true;
+            setTimeout(() => fadeMat(m.material, 0, 1, 500), i * 200);
+          });
+        }
+        selectedPlanetRef.current = null;
+        onPlanetClickRef.current?.(null);
+        resetCamera();
+
+      } else if (newStep === 3) {
+        controls.autoRotate = false;
+        ringMeshes.forEach(r => { r.material.opacity = 0.55; });
+        hotspotMeshes.forEach(m => { m.visible = true; if (m.material.opacity < 1) m.material.opacity = 1; });
       }
-
-      // Sun appears last
-      setTimeout(() => {
-        fadeMaterial(sunMat, 0, 1, 400, () => {
-          sunMat.transparent = false;
-        });
-      }, baseDelay + n * stepDelay);
-
-      // Unfreeze + animate back to normal view so clockwise direction is visually correct
-      const unfreezeDelay = baseDelay + n * stepDelay + 1500;
-      setTimeout(() => {
-        frozenAllRef.current = false;
-        animateCamera(
-          camera.position.clone(), controls.target.clone(),
-          defaultCamPos.clone(), defaultTarget.clone(),
-          1200,
-        );
-      }, unfreezeDelay);
     };
 
-    moveToRef.current      = moveTo;
-    sceneApiRef.current    = { zoomBack, resetCamera, zoomToPoint };
-    triggerIntroRef.current = triggerIntro;
+    // ── Planet selection (called by external prop change) ─────────────────────
+    const selectPlanet = (index) => {
+      if (index === null || index === undefined) {
+        selectedPlanetRef.current = null;
+        resetCamera();
+      } else {
+        const mesh = hotspotMeshes[index];
+        if (mesh?.visible) {
+          selectedPlanetRef.current = index;
+          moveTo(mesh.position.clone());
+        }
+      }
+    };
 
-    // ── Click handling ───────────────────────────────────────────────────────
+    sceneApiRef.current = { transitionToStep, selectPlanet };
+
+    // ── Click handling ────────────────────────────────────────────────────────
     const raycaster = new THREE.Raycaster();
     const mouse     = new THREE.Vector2();
 
     const handleClick = (event) => {
-      if (panelRef.current?.contains(event.target)) return;
-      mouse.x = (event.clientX / window.innerWidth)  *  2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) *  2 + 1;
+      if (currentStep < 2) return;
+      const rect = canvas.getBoundingClientRect();
+      mouse.x =  ((event.clientX - rect.left) / rect.width)  * 2 - 1;
+      mouse.y = -((event.clientY - rect.top)  / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
-
-      // Check sun first
-      const sunHit = raycaster.intersectObject(sunMesh);
-      if (sunHit.length > 0) {
-        triggerIntro();
-        return;
-      }
-
-      const intersects = raycaster.intersectObjects(hotspotMeshes);
-      if (intersects.length > 0) {
-        const hit = intersects[0].object;
-        const idx = hotspotMeshes.indexOf(hit);
-        selectedPlanetRef.current = idx;
-        setPanel({ title: hit.userData.title, text: hit.userData.text });
-        setPanelIndex(idx);
-        zoomToPoint(hit.position.clone());
+      const hits = raycaster.intersectObjects(hotspotMeshes.filter(m => m.visible));
+      if (hits.length > 0) {
+        const idx = hotspotMeshes.indexOf(hits[0].object);
+        onPlanetClickRef.current?.(idx);
       } else {
-        selectedPlanetRef.current = null;
-        setPanel(null);
-        zoomBack();
+        onPlanetClickRef.current?.(null);
       }
     };
-    window.addEventListener('click', handleClick);
+    canvas.addEventListener('click', handleClick);
 
-    // ── Render loop ──────────────────────────────────────────────────────────
+    // ── Render loop ───────────────────────────────────────────────────────────
     let frameId;
     let lastTime = performance.now();
 
@@ -348,27 +270,30 @@ export default function LabScene() {
       frameId = requestAnimationFrame(animate);
       const now   = performance.now();
       const delta = Math.min((now - lastTime) / 1000, 0.05);
-      lastTime    = now;
+      lastTime = now;
 
-      orbitsConfig.forEach((cfg, i) => {
-        const anySelected = selectedPlanetRef.current !== null;
-        if (!frozenAllRef.current && !anySelected) {
+      const anySelected = selectedPlanetRef.current !== null;
+
+      if (!anySelected && currentStep >= 2) {
+        orbitsConfig.forEach((cfg, i) => {
           orbitAngles[i] -= cfg.speed * delta;
           hotspotMeshes[i].position.copy(getOrbitPos(cfg, orbitAngles[i]));
-        }
+        });
+      }
 
+      // Labels (visible only in step 2+ when nothing selected)
+      const showLabels = currentStep >= 2 && !anySelected;
+      const cW = container.clientWidth;
+      const cH = container.clientHeight;
+      hotspotMeshes.forEach((mesh, i) => {
         const el = labelRefsArr.current[i];
-        if (el) {
-          const worldPos = hotspotMeshes[i].position.clone();
-          const ndc = worldPos.project(camera);
-          const sx  = ( ndc.x * 0.5 + 0.5) * window.innerWidth;
-          const sy  = (-ndc.y * 0.5 + 0.5) * window.innerHeight;
-
-          const visible = ndc.z < 1 && hotspotMeshes[i].material.opacity > 0.05 && !anySelected;
-
-          el.style.opacity   = visible ? '1' : '0';
-          el.style.transform = `translate(calc(${sx}px - 50%), calc(${sy}px - 100% - 10px))`;
-        }
+        if (!el) return;
+        if (!mesh.visible || !showLabels) { el.style.opacity = '0'; return; }
+        const ndc = mesh.position.clone().project(camera);
+        const sx  = ( ndc.x * 0.5 + 0.5) * cW;
+        const sy  = (-ndc.y * 0.5 + 0.5) * cH;
+        el.style.opacity   = ndc.z < 1 ? '1' : '0';
+        el.style.transform = `translate(calc(${sx}px - 50%), calc(${sy}px - 100% - 10px))`;
       });
 
       controls.update();
@@ -376,81 +301,54 @@ export default function LabScene() {
     };
     animate();
 
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
+    // ── Resize ────────────────────────────────────────────────────────────────
+    const resizeObserver = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (!width || !height) return;
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-    window.addEventListener('resize', handleResize);
+      renderer.setSize(width, height, false);
+    });
+    resizeObserver.observe(container);
 
     return () => {
       cancelAnimationFrame(frameId);
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('click', handleClick);
-      renderer.domElement.removeEventListener('pointerdown', stopAutoRotate);
+      resizeObserver.disconnect();
+      canvas.removeEventListener('click', handleClick);
       controls.dispose();
       renderer.dispose();
       environment.dispose();
-      ringGeometries.forEach((g) => g.dispose());
-      ringMaterials.forEach((m) => m.dispose());
-      hotspotMeshes.forEach((m) => { m.geometry.dispose(); m.material.dispose(); });
-      sunMat.dispose();
-      sunGeo.dispose();
-      moveToRef.current         = null;
-      sceneApiRef.current       = null;
-      hotspotMeshesRef.current  = [];
+      ringGeometries.forEach(g => g.dispose());
+      ringMaterials.forEach(m => m.dispose());
+      hotspotMeshes.forEach(m => { m.geometry.dispose(); m.material.dispose(); });
+      sunMat.dispose(); sunGeo.dispose();
+      sceneApiRef.current = null;
     };
   }, []);
 
-  const handleNav = (dir) => {
-    // After the last hint, trigger the intro animation instead of looping
-    if (dir === 1 && panelIndex === hotspotsData.length - 1) {
-      triggerIntroRef.current?.();
-      return;
-    }
-    const nextIdx = (panelIndex + dir + hotspotsData.length) % hotspotsData.length;
-    const mesh    = hotspotMeshesRef.current[nextIdx];
-    selectedPlanetRef.current = nextIdx;
-    setPanelIndex(nextIdx);
-    setPanel({ title: hotspotsData[nextIdx].title, text: hotspotsData[nextIdx].text });
-    if (mesh) moveToRef.current?.(mesh.position.clone());
-  };
+  // React to sceneStep prop changes
+  useEffect(() => {
+    sceneApiRef.current?.transitionToStep(sceneStep);
+  }, [sceneStep]);
 
-  const handleReset = () => {
-    selectedPlanetRef.current = null;
-    frozenAllRef.current      = false;
-    setPanel(null);
-    sceneApiRef.current?.resetCamera();
-  };
+  // React to selectedPlanet prop changes (nav arrows or external control)
+  useEffect(() => {
+    if (!sceneApiRef.current) return;
+    sceneApiRef.current.selectPlanet(selectedPlanet ?? null);
+  }, [selectedPlanet]);
 
   return (
-    <main className={styles.stage}>
+    <div ref={containerRef} className={styles.stage}>
       <canvas ref={canvasRef} className={styles.canvas} />
-      <div className={styles.heroBlock}>
-        <h1 className={styles.heroTitle}>Von Anfang an auf der richtigen Umlaufbahn</h1>
-        <p className={styles.heroText}>Gute digitale Produkte entstehen nicht zufällig, sie kreisen um einen gemeinsamen Kern. Wir bringen diese Ausrichtung in Projekte und Organisationen. Strukturiert, kollaborativ und ohne Umwege. Das Ergebnis: Produkte, die intuitiv funktionieren – für Menschen, Teams und Unternehmen.</p>
-      </div>
-
       {hotspotsData.map((h, i) => (
         <span
           key={h.title}
-          ref={(el) => { labelRefsArr.current[i] = el; }}
+          ref={el => { labelRefsArr.current[i] = el; }}
           className={styles.orbitLabel}
         >
           {h.title}
         </span>
       ))}
-      {panel && (
-        <aside ref={panelRef} className={styles.panel}>
-          <div className={styles.panelTitle}>{panel.title}</div>
-          <p className={styles.panelText}>{panel.text}</p>
-          <div className={styles.panelNav}>
-            <button className={styles.navButton} type="button" onClick={() => handleNav(-1)}>←</button>
-            <span className={styles.navCounter}>{panelIndex + 1} von {hotspotsData.length}</span>
-            <button className={styles.navButton} type="button" onClick={() => handleNav(1)}>→</button>
-          </div>
-        </aside>
-      )}
-    </main>
+    </div>
   );
 }
