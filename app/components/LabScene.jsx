@@ -32,7 +32,7 @@ const orbitsConfig = [
   { radius: 2.2, tiltX: 0.30, tiltZ:  0.18, speed: 0.22,  startAngle: 0.9 },
 ];
 
-export default function LabScene({ sceneStep = 0, selectedPlanet, onPlanetClick }) {
+export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPlanet, onPlanetClick }) {
   const containerRef      = useRef(null);
   const canvasRef         = useRef(null);
   const sceneApiRef       = useRef(null);
@@ -73,16 +73,17 @@ export default function LabScene({ sceneStep = 0, selectedPlanet, onPlanetClick 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping   = true;
     controls.dampingFactor   = 0.04;
-    controls.enableZoom      = true;
+    controls.enableZoom      = false;   // enabled only in step 2
+    controls.enableRotate    = false;   // enabled only in step 2
     controls.enablePan       = false;
     controls.autoRotate      = true;
-    controls.autoRotateSpeed = 0.3;
+    controls.autoRotateSpeed = 1.8;
     controls.minDistance     = 4;
     controls.maxDistance     = 32;
     controls.mouseButtons    = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.DOLLY };
     controls.update();
 
-    renderer.domElement.addEventListener('pointerdown', () => { controls.autoRotate = false; });
+    renderer.domElement.addEventListener('pointerdown', () => { if (currentStep >= 2) controls.autoRotate = false; });
 
     // Lighting
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
@@ -188,26 +189,28 @@ export default function LabScene({ sceneStep = 0, selectedPlanet, onPlanetClick 
         hotspotMeshes.forEach(m => { m.visible = false; m.material.opacity = 0; });
         selectedPlanetRef.current = null;
         onPlanetClickRef.current?.(null);
-        controls.autoRotate = true;
+        controls.autoRotate   = true;
+        controls.enableZoom   = false;
+        controls.enableRotate = false;
         resetCamera();
 
       } else if (newStep === 1) {
-        controls.autoRotate = true;
-        if (prev < 1) {
-          // Forward: stagger rings 1–3 in
-          [1, 2, 3].forEach((ri, idx) => {
-            setTimeout(() => fadeMat(ringMeshes[ri].material, 0, 0.55, 700), idx * 450);
-          });
-        } else {
-          // Backward: hide planets
+        controls.autoRotate   = true;
+        controls.enableZoom   = false;
+        controls.enableRotate = false;
+        if (prev >= 2) {
+          // Backward from step 2: hide planets; rings driven by step1Progress
           hotspotMeshes.forEach(m => { m.visible = false; m.material.opacity = 0; });
           selectedPlanetRef.current = null;
           onPlanetClickRef.current?.(null);
           resetCamera();
         }
+        // Forward from step 0: rings appear via scroll (setStep1Progress handles opacity)
 
       } else if (newStep === 2) {
-        controls.autoRotate = false;
+        controls.autoRotate   = false;
+        controls.enableZoom   = true;
+        controls.enableRotate = true;
         ringMeshes.forEach(r => { r.material.opacity = 0.55; });
         if (prev < 2) {
           hotspotMeshes.forEach((m, i) => {
@@ -240,7 +243,15 @@ export default function LabScene({ sceneStep = 0, selectedPlanet, onPlanetClick 
       }
     };
 
-    sceneApiRef.current = { transitionToStep, selectPlanet };
+    const setStep1Progress = (p) => {
+      if (currentStep !== 1) return;
+      [1, 2, 3].forEach((ri, idx) => {
+        const opacity = Math.max(0, Math.min(1, (p - idx / 3) * 3)) * 0.55;
+        ringMeshes[ri].material.opacity = opacity;
+      });
+    };
+
+    sceneApiRef.current = { transitionToStep, selectPlanet, setStep1Progress };
 
     // ── Click handling ────────────────────────────────────────────────────────
     const raycaster = new THREE.Raycaster();
@@ -261,6 +272,16 @@ export default function LabScene({ sceneStep = 0, selectedPlanet, onPlanetClick 
       }
     };
     canvas.addEventListener('click', handleClick);
+
+    // In step 2 at max zoom-out, let the wheel event pass through to scroll the page
+    const handleContainerWheel = (event) => {
+      if (currentStep < 2) return;
+      const dist = camera.position.distanceTo(controls.target);
+      if (event.deltaY > 0 && dist >= controls.maxDistance - 0.5) {
+        event.stopPropagation();
+      }
+    };
+    container.addEventListener('wheel', handleContainerWheel, { capture: true });
 
     // ── Render loop ───────────────────────────────────────────────────────────
     let frameId;
@@ -315,6 +336,7 @@ export default function LabScene({ sceneStep = 0, selectedPlanet, onPlanetClick 
       cancelAnimationFrame(frameId);
       resizeObserver.disconnect();
       canvas.removeEventListener('click', handleClick);
+      container.removeEventListener('wheel', handleContainerWheel, true);
       controls.dispose();
       renderer.dispose();
       environment.dispose();
@@ -336,6 +358,11 @@ export default function LabScene({ sceneStep = 0, selectedPlanet, onPlanetClick 
     if (!sceneApiRef.current) return;
     sceneApiRef.current.selectPlanet(selectedPlanet ?? null);
   }, [selectedPlanet]);
+
+  // Drive ring formation in step 1 via scroll position
+  useEffect(() => {
+    sceneApiRef.current?.setStep1Progress(step1Progress);
+  }, [step1Progress]);
 
   return (
     <div ref={containerRef} className={styles.stage}>

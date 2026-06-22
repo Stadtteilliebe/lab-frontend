@@ -23,26 +23,41 @@ const hotspotsData = [
   },
 ];
 
+const STAR_CONFIGS = [
+  { left: '5%',  top: '8%',  maxH: 35 },
+  { left: '15%', top: '3%',  maxH: 52 },
+  { left: '27%', top: '18%', maxH: 28 },
+  { left: '38%', top: '6%',  maxH: 45 },
+  { left: '50%', top: '24%', maxH: 38 },
+  { left: '63%', top: '10%', maxH: 55 },
+  { left: '74%', top: '2%',  maxH: 32 },
+  { left: '84%', top: '15%', maxH: 48 },
+  { left: '93%', top: '7%',  maxH: 40 },
+];
+
 const STORY_STEPS = [
   {
-    title: 'Entdecke unsere\nLeistungen.',
+    title: 'Entdecke unsere\nLeistungen',
     text: 'Hinter jedem großen Produkt stecken Kompetenzen, die ineinandergreifen. Was wir tun – und wie wir es tun – dreht sich um einen gemeinsamen Kern.',
   },
   {
-    title: 'Aus einem Kern\nbilden sich Kreise.',
-    text: 'Gute digitale Produkte entstehen nicht zufällig. Sie kreisen um eine gemeinsame Mitte – und entwickeln von dort aus Struktur, Richtung und Form.\n\nSo arbeiten wir auch.',
+    title: 'Aus einem Kern\nbilden sich Kreise',
+    text: 'Aus einem gemeinsamen Kern entsteht alles, was trägt. Strategie, Gestaltung und Entwicklung entfalten ihre Wirkung erst dann vollständig, wenn sie von Anfang an auf dieselbe Mitte ausgerichtet sind.',
   },
   {
-    title: 'Unsere Leistungen.',
+    title: 'Unsere Leistungen',
     text: 'Klicke auf einen der Planeten, um mehr über unsere Leistungen zu erfahren.',
     hint: true,
   },
 ];
 
 export default function ScrollStory() {
-  const [scrollStep, setScrollStep]   = useState(0);
-  const [clickedIndex, setClickedIndex] = useState(null);
-  const storyRef = useRef(null);
+  const [scrollStep, setScrollStep]       = useState(0);
+  const [step1Progress, setStep1Progress] = useState(0);
+  const [clickedIndex, setClickedIndex]   = useState(null);
+  const [footerScrollProgress, setFooterScrollProgress] = useState(0);
+  const storyRef  = useRef(null);
+  const footerRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,9 +66,18 @@ export default function ScrollStory() {
       const scrolled      = -rect.top;
       const scrollableRange = storyRef.current.offsetHeight - window.innerHeight;
       if (scrollableRange <= 0) return;
-      const progress = Math.max(0, Math.min(1, scrolled / scrollableRange));
-      const step = Math.min(STORY_STEPS.length - 1, Math.floor(progress * STORY_STEPS.length));
+      const progress  = Math.max(0, Math.min(1, scrolled / scrollableRange));
+      const stepSize  = 1 / STORY_STEPS.length;
+      const step      = Math.min(STORY_STEPS.length - 1, Math.floor(progress * STORY_STEPS.length));
+      const s1p       = Math.max(0, Math.min(1, (progress - stepSize) / stepSize));
       setScrollStep(step);
+      setStep1Progress(s1p);
+
+      if (footerRef.current) {
+        const fRect = footerRef.current.getBoundingClientRect();
+        const fp = Math.max(0, Math.min(1, (window.innerHeight - fRect.top) / (window.innerHeight * 1.5)));
+        setFooterScrollProgress(fp);
+      }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
@@ -114,14 +138,37 @@ export default function ScrollStory() {
           <div className={styles.rightColumn}>
             <LabScene
               sceneStep={scrollStep}
+              step1Progress={step1Progress}
               selectedPlanet={clickedIndex}
               onPlanetClick={handlePlanetClick}
             />
           </div>
+
+          {scrollStep === 0 && (
+            <div className={styles.scrollIndicator}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 2v10M3 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          )}
         </div>
       </div>
 
-      <footer className={styles.footer}>
+      <footer ref={footerRef} className={styles.footer}>
+        <div className={styles.starsContainer} aria-hidden="true">
+          {STAR_CONFIGS.map((s, i) => (
+            <span
+              key={i}
+              className={styles.shootingStar}
+              style={{
+                left: s.left,
+                top: s.top,
+                height: `${s.maxH}px`,
+                transform: `scaleY(${footerScrollProgress})`,
+              }}
+            />
+          ))}
+        </div>
         <p className={styles.footerBrand}>stadtteilliebe</p>
         <p className={styles.footerTagline}>Lass uns gemeinsam durchstarten</p>
       </footer>
