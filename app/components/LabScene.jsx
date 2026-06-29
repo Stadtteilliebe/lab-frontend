@@ -220,7 +220,8 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
         }
         selectedPlanetRef.current = null;
         onPlanetClickRef.current?.(null);
-        resetCamera();
+        // no resetCamera here — camera stays at its current rotated position
+        // to avoid a jarring full-scene spin on every step-2 entry
 
       } else if (newStep === 3) {
         controls.autoRotate = false;

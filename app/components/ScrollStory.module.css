@@ -19,7 +19,7 @@
   flex-direction: column;
   justify-content: center;
   padding: clamp(32px, 5.5vw, 64px) clamp(32px, 5.5vw, 80px);
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+
   overflow: hidden;
 }
 
@@ -131,7 +131,6 @@
   justify-content: center;
   gap: 16px;
   background: #06060a;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
   overflow: hidden;
 }
 
@@ -166,6 +165,5 @@
   width: 1px;
   background: #ffffff;
   border-radius: 1px;
-  transform-origin: top center;
-  will-change: transform;
 }
+

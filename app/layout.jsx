@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Nothing great is made alone.',
+  title: 'Unsere Leistungen',
   description: 'Interactive Stadtteilliebe Lab experiment.',
 };
 

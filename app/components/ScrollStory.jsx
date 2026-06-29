@@ -24,15 +24,26 @@ const hotspotsData = [
 ];
 
 const STAR_CONFIGS = [
-  { left: '5%',  top: '8%',  maxH: 35 },
-  { left: '15%', top: '3%',  maxH: 52 },
-  { left: '27%', top: '18%', maxH: 28 },
-  { left: '38%', top: '6%',  maxH: 45 },
-  { left: '50%', top: '24%', maxH: 38 },
-  { left: '63%', top: '10%', maxH: 55 },
-  { left: '74%', top: '2%',  maxH: 32 },
-  { left: '84%', top: '15%', maxH: 48 },
-  { left: '93%', top: '7%',  maxH: 40 },
+  { left: '3%',  top: '5%',  initH: 2, maxH: 42 },
+  { left: '8%',  top: '22%', initH: 3, maxH: 58 },
+  { left: '13%', top: '10%', initH: 1, maxH: 30 },
+  { left: '18%', top: '3%',  initH: 2, maxH: 55 },
+  { left: '23%', top: '28%', initH: 4, maxH: 50 },
+  { left: '28%', top: '14%', initH: 1, maxH: 35 },
+  { left: '33%', top: '7%',  initH: 3, maxH: 48 },
+  { left: '38%', top: '20%', initH: 2, maxH: 38 },
+  { left: '43%', top: '5%',  initH: 1, maxH: 52 },
+  { left: '49%', top: '24%', initH: 3, maxH: 40 },
+  { left: '54%', top: '11%', initH: 2, maxH: 62 },
+  { left: '60%', top: '18%', initH: 1, maxH: 28 },
+  { left: '65%', top: '6%',  initH: 2, maxH: 56 },
+  { left: '70%', top: '28%', initH: 4, maxH: 44 },
+  { left: '75%', top: '2%',  initH: 1, maxH: 34 },
+  { left: '80%', top: '15%', initH: 3, maxH: 50 },
+  { left: '85%', top: '8%',  initH: 2, maxH: 46 },
+  { left: '90%', top: '22%', initH: 1, maxH: 36 },
+  { left: '94%', top: '5%',  initH: 2, maxH: 60 },
+  { left: '98%', top: '18%', initH: 3, maxH: 55 },
 ];
 
 const STORY_STEPS = [
@@ -104,7 +115,7 @@ export default function ScrollStory() {
 
   return (
     <>
-      <div ref={storyRef} className={styles.storyWrapper}>
+      <div ref={storyRef} id="leistungen" className={styles.storyWrapper}>
         <div className={styles.stickySection}>
 
           {/* ── Left: text panel ── */}
@@ -144,13 +155,6 @@ export default function ScrollStory() {
             />
           </div>
 
-          {scrollStep === 0 && (
-            <div className={styles.scrollIndicator}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7 2v10M3 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          )}
         </div>
       </div>
 
@@ -163,8 +167,7 @@ export default function ScrollStory() {
               style={{
                 left: s.left,
                 top: s.top,
-                height: `${s.maxH}px`,
-                transform: `scaleY(${footerScrollProgress})`,
+                height: `${s.initH + footerScrollProgress * (s.maxH - s.initH)}px`,
               }}
             />
           ))}
