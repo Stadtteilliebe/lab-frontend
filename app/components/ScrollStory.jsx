@@ -172,7 +172,17 @@ export default function ScrollStory() {
             />
           ))}
         </div>
-        <p className={styles.footerBrand}>stadtteilliebe</p>
+        <p
+          className={styles.footerBrand}
+          data-text="stadtteilliebe"
+          onMouseMove={e => {
+            const r = e.currentTarget.getBoundingClientRect();
+            e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
+            e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
+          }}
+          onMouseEnter={e => e.currentTarget.style.setProperty('--glow', '1')}
+          onMouseLeave={e => e.currentTarget.style.setProperty('--glow', '0')}
+        >stadtteilliebe</p>
         <p className={styles.footerTagline}>Lass uns gemeinsam durchstarten</p>
       </footer>
     </>
