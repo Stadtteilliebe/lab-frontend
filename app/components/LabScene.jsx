@@ -209,7 +209,7 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
 
       } else if (newStep === 2) {
         controls.autoRotate   = false;
-        controls.enableZoom   = true;
+        controls.enableZoom   = false;  // scroll stays as page scroll, no zoom
         controls.enableRotate = true;
         ringMeshes.forEach(r => { r.material.opacity = 0.55; });
         if (prev < 2) {
@@ -220,8 +220,10 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
         }
         selectedPlanetRef.current = null;
         onPlanetClickRef.current?.(null);
-        // no resetCamera here — camera stays at its current rotated position
-        // to avoid a jarring full-scene spin on every step-2 entry
+        // Snap camera to front-facing default instantly — no animation to avoid spin
+        camera.position.copy(defaultCamPos);
+        controls.target.copy(defaultTarget);
+        controls.update();
 
       } else if (newStep === 3) {
         controls.autoRotate = false;
@@ -274,15 +276,6 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
     };
     canvas.addEventListener('click', handleClick);
 
-    // In step 2 at max zoom-out, let the wheel event pass through to scroll the page
-    const handleContainerWheel = (event) => {
-      if (currentStep < 2) return;
-      const dist = camera.position.distanceTo(controls.target);
-      if (event.deltaY > 0 && dist >= controls.maxDistance - 0.5) {
-        event.stopPropagation();
-      }
-    };
-    container.addEventListener('wheel', handleContainerWheel, { capture: true });
 
     // ── Render loop ───────────────────────────────────────────────────────────
     let frameId;
@@ -296,12 +289,7 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
 
       const anySelected = selectedPlanetRef.current !== null;
 
-      if (!anySelected && currentStep >= 2) {
-        orbitsConfig.forEach((cfg, i) => {
-          orbitAngles[i] -= cfg.speed * delta;
-          hotspotMeshes[i].position.copy(getOrbitPos(cfg, orbitAngles[i]));
-        });
-      }
+      // Planets stay frozen at startAngle positions — no continuous orbit animation
 
       // Labels (visible only in step 2+ when nothing selected)
       const showLabels = currentStep >= 2 && !anySelected;
@@ -337,7 +325,6 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       cancelAnimationFrame(frameId);
       resizeObserver.disconnect();
       canvas.removeEventListener('click', handleClick);
-      container.removeEventListener('wheel', handleContainerWheel, true);
       controls.dispose();
       renderer.dispose();
       environment.dispose();
