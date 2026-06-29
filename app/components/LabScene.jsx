@@ -236,11 +236,13 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
     const selectPlanet = (index) => {
       if (index === null || index === undefined) {
         selectedPlanetRef.current = null;
+        controls.enableZoom = false;
         resetCamera();
       } else {
         const mesh = hotspotMeshes[index];
         if (mesh?.visible) {
           selectedPlanetRef.current = index;
+          controls.enableZoom = true;
           moveTo(mesh.position.clone());
         }
       }
