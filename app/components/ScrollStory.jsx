@@ -48,11 +48,11 @@ const STAR_CONFIGS = [
 
 const STORY_STEPS = [
   {
-    title: 'Entdecke unsere\nLeistungen',
+    title: 'So arbeiten wir',
     text: 'Hinter jedem großen Produkt stecken Kompetenzen, die ineinandergreifen. Was wir tun – und wie wir es tun – dreht sich um einen gemeinsamen Kern.',
   },
   {
-    title: 'Aus einem Kern\nbilden sich Kreise',
+    title: 'Wir starten\ngemeinsam',
     text: 'Aus einem gemeinsamen Kern entsteht alles, was trägt. Strategie, Gestaltung und Entwicklung entfalten ihre Wirkung erst dann vollständig, wenn sie von Anfang an auf dieselbe Mitte ausgerichtet sind.',
   },
   {
@@ -124,7 +124,12 @@ export default function ScrollStory() {
               <h2 className={styles.stepTitle}>{leftTitle}</h2>
               <p  className={styles.stepText}>{leftText}</p>
               {showHint && (
-                <p className={styles.stepHint}>↗ Planeten anklicken</p>
+                <button
+                  className={styles.firstPlanetBtn}
+                  onClick={() => handlePlanetClick(0)}
+                >
+                  Ersten Planeten anschauen
+                </button>
               )}
             </div>
 
@@ -158,12 +163,35 @@ export default function ScrollStory() {
         </div>
       </div>
 
-      <footer ref={footerRef} className={styles.footer}>
+      <footer
+        ref={footerRef}
+        className={styles.footer}
+        onMouseMove={e => {
+          const r = e.currentTarget.getBoundingClientRect();
+          e.currentTarget.style.setProperty('--fmx', `${e.clientX - r.left}px`);
+          e.currentTarget.style.setProperty('--fmy', `${e.clientY - r.top}px`);
+          e.currentTarget.style.setProperty('--fglow', '1');
+        }}
+        onMouseLeave={e => e.currentTarget.style.setProperty('--fglow', '0')}
+      >
         <div className={styles.starsContainer} aria-hidden="true">
           {STAR_CONFIGS.map((s, i) => (
             <span
               key={i}
               className={styles.shootingStar}
+              style={{
+                left: s.left,
+                top: s.top,
+                height: `${s.initH + footerScrollProgress * (s.maxH - s.initH)}px`,
+              }}
+            />
+          ))}
+        </div>
+        <div className={styles.starsContainerGlow} aria-hidden="true">
+          {STAR_CONFIGS.map((s, i) => (
+            <span
+              key={i}
+              className={styles.shootingStarGlow}
               style={{
                 left: s.left,
                 top: s.top,
