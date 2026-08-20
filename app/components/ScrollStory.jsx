@@ -23,28 +23,43 @@ const hotspotsData = [
   },
 ];
 
+// Deterministic pseudo-random helper (no Math.random) so server- and
+// client-rendered markup match exactly on hydration.
+function seeded(i, salt) {
+  let t = (i * 374761393 + salt * 668265263) >>> 0;
+  t = Math.imul(t ^ (t >>> 13), 1274126177);
+  t ^= t >>> 16;
+  return (t >>> 0) / 4294967296;
+}
+
 const STAR_CONFIGS = [
-  { left: '3%',  top: '5%',  initH: 2, maxH: 42 },
-  { left: '8%',  top: '22%', initH: 3, maxH: 58 },
-  { left: '13%', top: '10%', initH: 1, maxH: 30 },
-  { left: '18%', top: '3%',  initH: 2, maxH: 55 },
-  { left: '23%', top: '28%', initH: 4, maxH: 50 },
-  { left: '28%', top: '14%', initH: 1, maxH: 35 },
-  { left: '33%', top: '7%',  initH: 3, maxH: 48 },
-  { left: '38%', top: '20%', initH: 2, maxH: 38 },
-  { left: '43%', top: '5%',  initH: 1, maxH: 52 },
-  { left: '49%', top: '24%', initH: 3, maxH: 40 },
-  { left: '54%', top: '11%', initH: 2, maxH: 62 },
-  { left: '60%', top: '18%', initH: 1, maxH: 28 },
-  { left: '65%', top: '6%',  initH: 2, maxH: 56 },
-  { left: '70%', top: '28%', initH: 4, maxH: 44 },
-  { left: '75%', top: '2%',  initH: 1, maxH: 34 },
-  { left: '80%', top: '15%', initH: 3, maxH: 50 },
-  { left: '85%', top: '8%',  initH: 2, maxH: 46 },
-  { left: '90%', top: '22%', initH: 1, maxH: 36 },
-  { left: '94%', top: '5%',  initH: 2, maxH: 60 },
-  { left: '98%', top: '18%', initH: 3, maxH: 55 },
-];
+  { left: '3%',  top: '5%',  length: 42 },
+  { left: '8%',  top: '22%', length: 58 },
+  { left: '13%', top: '10%', length: 30 },
+  { left: '18%', top: '3%',  length: 55 },
+  { left: '23%', top: '28%', length: 50 },
+  { left: '28%', top: '14%', length: 35 },
+  { left: '33%', top: '7%',  length: 48 },
+  { left: '38%', top: '20%', length: 38 },
+  { left: '43%', top: '5%',  length: 52 },
+  { left: '49%', top: '24%', length: 40 },
+  { left: '54%', top: '11%', length: 62 },
+  { left: '60%', top: '18%', length: 28 },
+  { left: '65%', top: '6%',  length: 56 },
+  { left: '70%', top: '28%', length: 44 },
+  { left: '75%', top: '2%',  length: 34 },
+  { left: '80%', top: '15%', length: 50 },
+  { left: '85%', top: '8%',  length: 46 },
+  { left: '90%', top: '22%', length: 36 },
+  { left: '94%', top: '5%',  length: 60 },
+  { left: '98%', top: '18%', length: 55 },
+].map((s, i) => ({
+  ...s,
+  // Long, widely-staggered cycles with a short active window (see the
+  // keyframe below) so only a couple of stars are ever moving at once.
+  duration: (7 + seeded(i, 5) * 9).toFixed(2),
+  delay: (seeded(i, 6) * 14).toFixed(2),
+}));
 
 const STORY_STEPS = [
   {
@@ -66,9 +81,29 @@ export default function ScrollStory() {
   const [scrollStep, setScrollStep]       = useState(0);
   const [step1Progress, setStep1Progress] = useState(0);
   const [clickedIndex, setClickedIndex]   = useState(null);
-  const [footerScrollProgress, setFooterScrollProgress] = useState(0);
+  const [skyHeight, setSkyHeight] = useState(220);
   const storyRef  = useRef(null);
   const footerRef = useRef(null);
+  const brandRef  = useRef(null);
+
+  // Measure the space above the "stadtteilliebe" wordmark so the star
+  // field can never grow into it, however tall the footer becomes.
+  useEffect(() => {
+    const measureSky = () => {
+      if (!footerRef.current || !brandRef.current) return;
+      const footerTop = footerRef.current.getBoundingClientRect().top;
+      const brandTop  = brandRef.current.getBoundingClientRect().top;
+      setSkyHeight(Math.max(80, brandTop - footerTop - 40));
+    };
+    measureSky();
+    const ro = new ResizeObserver(measureSky);
+    if (footerRef.current) ro.observe(footerRef.current);
+    window.addEventListener('resize', measureSky);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measureSky);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -83,12 +118,6 @@ export default function ScrollStory() {
       const s1p       = Math.max(0, Math.min(1, (progress - stepSize) / stepSize));
       setScrollStep(step);
       setStep1Progress(s1p);
-
-      if (footerRef.current) {
-        const fRect = footerRef.current.getBoundingClientRect();
-        const fp = Math.max(0, Math.min(1, (window.innerHeight - fRect.top) / (window.innerHeight * 1.5)));
-        setFooterScrollProgress(fp);
-      }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
@@ -174,33 +203,46 @@ export default function ScrollStory() {
         }}
         onMouseLeave={e => e.currentTarget.style.setProperty('--fglow', '0')}
       >
-        <div className={styles.starsContainer} aria-hidden="true">
-          {STAR_CONFIGS.map((s, i) => (
-            <span
-              key={i}
-              className={styles.shootingStar}
-              style={{
-                left: s.left,
-                top: s.top,
-                height: `${s.initH + footerScrollProgress * (s.maxH - s.initH)}px`,
-              }}
-            />
-          ))}
+        <div className={styles.starsContainer} style={{ height: `${skyHeight}px` }} aria-hidden="true">
+          {STAR_CONFIGS.map((s, i) => {
+            const topPx = (parseFloat(s.top) / 100) * skyHeight;
+            const h     = Math.min(s.length, skyHeight - topPx - 6);
+            return (
+              <span
+                key={i}
+                className={styles.shootingStar}
+                style={{
+                  left: s.left,
+                  top: `${topPx}px`,
+                  height: `${h}px`,
+                  '--dur': `${s.duration}s`,
+                  animationDelay: `${s.delay}s`,
+                }}
+              />
+            );
+          })}
         </div>
-        <div className={styles.starsContainerGlow} aria-hidden="true">
-          {STAR_CONFIGS.map((s, i) => (
-            <span
-              key={i}
-              className={styles.shootingStarGlow}
-              style={{
-                left: s.left,
-                top: s.top,
-                height: `${s.initH + footerScrollProgress * (s.maxH - s.initH)}px`,
-              }}
-            />
-          ))}
+        <div className={styles.starsContainerGlow} style={{ height: `${skyHeight}px` }} aria-hidden="true">
+          {STAR_CONFIGS.map((s, i) => {
+            const topPx = (parseFloat(s.top) / 100) * skyHeight;
+            const h     = Math.min(s.length, skyHeight - topPx - 6);
+            return (
+              <span
+                key={i}
+                className={styles.shootingStarGlow}
+                style={{
+                  left: s.left,
+                  top: `${topPx}px`,
+                  height: `${h}px`,
+                  '--dur': `${s.duration}s`,
+                  animationDelay: `${s.delay}s`,
+                }}
+              />
+            );
+          })}
         </div>
         <p
+          ref={brandRef}
           className={styles.footerBrand}
           data-text="stadtteilliebe"
           onMouseMove={e => {
@@ -212,6 +254,30 @@ export default function ScrollStory() {
           onMouseLeave={e => e.currentTarget.style.setProperty('--glow', '0')}
         >stadtteilliebe</p>
         <p className={styles.footerTagline}>Lass uns gemeinsam durchstarten</p>
+
+        <a
+          href="https://stadtteilliebe.de/kontakt"
+          className={styles.ctaButton}
+        >
+          Kontakt aufnehmen
+        </a>
+
+        <div className={styles.siteFooter}>
+          <p className={styles.siteFooterBrand}>stadtteilliebe</p>
+          <p className={styles.siteFooterText}>
+            Nutzerzentrierte Marken und digitale Lösungen, modular, funktional
+            und technologiegetrieben. Strategisch, agil und mit Sinn für
+            Gestaltung.
+          </p>
+          <div className={styles.siteFooterLinks}>
+            <a href="https://stadtteilliebe.de/kontakt" className={styles.siteFooterLink}>
+              Kontakt
+            </a>
+            <a href="https://stadtteilliebe.de/impressum" className={styles.siteFooterLink}>
+              Impressum
+            </a>
+          </div>
+        </div>
       </footer>
     </>
   );
