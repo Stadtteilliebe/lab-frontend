@@ -16,16 +16,51 @@
 }
 
 /* ── Left column ─────────────────────────────────────────────────────────── */
+/* Explicit grid placement (rather than just track order) so rightColumn can
+   be reassigned to span both tracks and sit underneath this one — see
+   .leftColumnClear and .rightColumnExpanded below. */
 .leftColumn {
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: clamp(32px, 5.5vw, 64px) clamp(32px, 5.5vw, 80px);
   overflow: hidden;
+  background: #06060a;
+  transition: background-color 0.4s ease;
+}
+
+/* While a planet's detail is showing, the backdrop goes away entirely —
+   only the card (see .textCard) sits over the solar system. */
+.leftColumnClear {
+  background: transparent;
 }
 
 .textContent {
   animation: fadeSlideIn 0.45s ease forwards;
+}
+
+/* Planet detail text sits in its own translucent card, rather than the
+   whole left column changing — keeps the solar system visible around it
+   once the camera has zoomed into the selected planet. Hugs its content
+   (not the full column width) so it stays only as wide as the text needs. */
+.textCard {
+  align-self: flex-start;
+  width: fit-content;
+  /* Hard cap at the text's own max-width (420px) plus padding — fit-content
+     alone doesn't reliably shrink to that with pre-line text in a flex item. */
+  max-width: min(480px, 100%);
+  border-radius: 20px;
+  padding: 30px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.textCard .stepTitle {
+  font-size: clamp(18px, 1.8vw + 4px, 28px);
 }
 
 @keyframes fadeSlideIn {
@@ -139,8 +174,18 @@
 
 /* ── Right column ────────────────────────────────────────────────────────── */
 .rightColumn {
+  grid-column: 2;
+  grid-row: 1;
   position: relative;
+  z-index: 1;
   overflow: hidden;
+}
+
+/* Spans both tracks (no transition — grid placement can't animate anyway,
+   so this snaps instantly instead of sliding) once a planet is selected,
+   so it extends under leftColumn once its backdrop clears. */
+.rightColumnExpanded {
+  grid-column: 1 / -1;
 }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
@@ -177,7 +222,8 @@
 
 .footerBrand {
   position: relative;
-  margin-top: clamp(140px, 20vh, 240px);
+  /* Same gap as siteFooter's below it, for a consistent rhythm down the footer. */
+  margin-top: clamp(120px, 18vh, 220px);
   font-family: 'Averta', sans-serif;
   font-size: clamp(48px, 8vw, 120px);
   font-weight: 600;
@@ -187,13 +233,9 @@
   text-align: center;
   cursor: default;
   user-select: none;
-  /* Scales up slightly on reveal, echoing the "Unsere Leistungen" grow effect. */
-  transform: scale(0.88);
-  transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.footerContent.revealed .footerBrand {
-  transform: scale(1);
+  /* Scale is driven continuously from scroll position in ScrollStory.jsx
+     (brandScale) — the same "grows larger" idea as the "Unsere Leistungen"
+     title in HeroStage, but scrubbed the whole time, not a one-off reveal. */
 }
 
 .footerBrand::after {

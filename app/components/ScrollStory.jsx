@@ -45,9 +45,25 @@ export default function ScrollStory() {
   const [clickedIndex, setClickedIndex]   = useState(null);
   const [footerInView, setFooterInView] = useState(false);
   const [footerRevealed, setFooterRevealed] = useState(false);
+  const [brandScale, setBrandScale] = useState(0.55);
   const storyRef  = useRef(null);
   const footerRef = useRef(null);
   const brandRef  = useRef(null);
+
+  // Keep growing/shrinking "stadtteilliebe" as the footer scrolls through
+  // view, rather than a one-off reveal animation — same idea as the
+  // "Unsere Leistungen" title, but scrubbed continuously with scroll.
+  useEffect(() => {
+    const handleBrandScroll = () => {
+      if (!footerRef.current) return;
+      const rect = footerRef.current.getBoundingClientRect();
+      const p = Math.max(0, Math.min(1, (window.innerHeight - rect.top) / window.innerHeight));
+      setBrandScale(0.55 + p * 0.45);
+    };
+    window.addEventListener('scroll', handleBrandScroll, { passive: true });
+    handleBrandScroll();
+    return () => window.removeEventListener('scroll', handleBrandScroll);
+  }, []);
 
   // Reveal the footer content shortly after it scrolls into view.
   useEffect(() => {
@@ -114,8 +130,8 @@ export default function ScrollStory() {
         <div className={styles.stickySection}>
 
           {/* ── Left: text panel ── */}
-          <div className={styles.leftColumn}>
-            <div key={contentKey} className={styles.textContent}>
+          <div className={`${styles.leftColumn} ${hasPlanet ? styles.leftColumnClear : ''}`}>
+            <div key={contentKey} className={`${styles.textContent} ${hasPlanet ? styles.textCard : ''}`}>
               <h2 className={styles.stepTitle}>{leftTitle}</h2>
               <p  className={styles.stepText}>{leftText}</p>
               {showHint && (
@@ -158,7 +174,7 @@ export default function ScrollStory() {
           </div>
 
           {/* ── Right: solar system ── */}
-          <div className={styles.rightColumn}>
+          <div className={`${styles.rightColumn} ${hasPlanet ? styles.rightColumnExpanded : ''}`}>
             <LabScene
               sceneStep={scrollStep}
               step1Progress={step1Progress}
@@ -179,6 +195,7 @@ export default function ScrollStory() {
             ref={brandRef}
             className={styles.footerBrand}
             data-text="stadtteilliebe"
+            style={{ transform: `scale(${brandScale})` }}
             onMouseMove={e => {
               const r = e.currentTarget.getBoundingClientRect();
               e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);

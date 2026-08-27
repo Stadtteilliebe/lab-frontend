@@ -168,8 +168,18 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
     };
 
     const moveTo = (targetPos) => {
-      const dir = camera.position.clone().sub(controls.target).normalize();
-      animateCam(camera.position.clone(), controls.target.clone(), targetPos.clone().add(dir.multiplyScalar(3.5)), targetPos.clone(), 900);
+      // Always approach from the same flat, default angle (not whatever
+      // angle the camera happens to be rotated to) so the zoomed-in view
+      // never looks more oblique than the default overview.
+      const dir = defaultCamPos.clone().sub(defaultTarget).normalize();
+      const newCamPos = targetPos.clone().add(dir.clone().multiplyScalar(3.5));
+      // Aim slightly left of the planet so it renders right-of-center once
+      // zoomed in — the text card covers the left side of the frame there.
+      const forward  = targetPos.clone().sub(newCamPos).normalize();
+      const rightVec = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+      const distance = newCamPos.distanceTo(targetPos);
+      const newTarget = targetPos.clone().sub(rightVec.multiplyScalar(distance * 0.42));
+      animateCam(camera.position.clone(), controls.target.clone(), newCamPos, newTarget, 900);
     };
 
     const resetCamera = () => {
