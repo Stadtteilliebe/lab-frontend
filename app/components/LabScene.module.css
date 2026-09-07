@@ -27,3 +27,38 @@
   will-change: transform, opacity;
   transition: opacity 0.3s ease;
 }
+
+/* Small pill labels scattered around the scene while a planet is
+   selected, naming the services within that category. */
+.subLabel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(6, 6, 10, 0.55);
+  backdrop-filter: blur(2px);
+  font-family: 'Averta', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  white-space: nowrap;
+  will-change: transform, opacity;
+  transition: opacity 0.4s ease;
+}
+
+.subLabel::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translateX(-50%);
+}

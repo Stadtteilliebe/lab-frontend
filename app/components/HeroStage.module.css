@@ -132,3 +132,24 @@
   border-color: rgba(0, 0, 0, 0.9);
   background: rgba(0, 0, 0, 0.05);
 }
+
+@media (max-width: 768px) {
+  .layer1,
+  .layer2 {
+    padding: 24px 24px clamp(32px, 8vh, 56px);
+  }
+
+  .panelHeading {
+    font-size: 26px;
+    margin-bottom: 14px;
+  }
+
+  .panelDesc {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .panelTitle {
+    font-size: calc(20px + var(--title-p, 0) * 8px);
+  }
+}

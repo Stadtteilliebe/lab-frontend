@@ -8,6 +8,7 @@ function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 export default function HeroStage() {
   const wrapperRef = useRef(null);
   const [progress, setProgress] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
@@ -22,9 +23,19 @@ export default function HeroStage() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Below this width the panel starts fully open instead of as a 50%-wide
+  // sliver — there isn't room to slide it open next to the background art.
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
   // Phase 1 (0→0.5): panel 50%→100%, images slide right
   const p1 = clamp(progress / 0.5, 0, 1);
-  const panelWidthPct = 50 + p1 * 50;
+  const panelWidthPct = isMobile ? 100 : 50 + p1 * 50;
   const bgTX = p1 * 15;
 
   // Phase 2 (0.5→1): "Unsere Leistungen" grows slightly

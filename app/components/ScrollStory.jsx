@@ -50,19 +50,27 @@ export default function ScrollStory() {
   const footerRef = useRef(null);
   const brandRef  = useRef(null);
 
-  // Keep growing/shrinking "stadtteilliebe" as the footer scrolls through
-  // view, rather than a one-off reveal animation — same idea as the
-  // "Unsere Leistungen" title, but scrubbed continuously with scroll.
+  // Grow "stadtteilliebe" as it approaches the center of the viewport and
+  // shrink it again as it moves away — tied to the brand text's own
+  // position, not a one-off reveal, so it replays every time it scrolls
+  // through view (in either direction), not just once.
   useEffect(() => {
     const handleBrandScroll = () => {
-      if (!footerRef.current) return;
-      const rect = footerRef.current.getBoundingClientRect();
-      const p = Math.max(0, Math.min(1, (window.innerHeight - rect.top) / window.innerHeight));
+      if (!brandRef.current) return;
+      const rect = brandRef.current.getBoundingClientRect();
+      const elCenter = rect.top + rect.height / 2;
+      const viewCenter = window.innerHeight / 2;
+      const maxDist = window.innerHeight / 2 + rect.height / 2;
+      const p = 1 - Math.max(0, Math.min(1, Math.abs(elCenter - viewCenter) / maxDist));
       setBrandScale(0.55 + p * 0.45);
     };
     window.addEventListener('scroll', handleBrandScroll, { passive: true });
+    window.addEventListener('resize', handleBrandScroll);
     handleBrandScroll();
-    return () => window.removeEventListener('scroll', handleBrandScroll);
+    return () => {
+      window.removeEventListener('scroll', handleBrandScroll);
+      window.removeEventListener('resize', handleBrandScroll);
+    };
   }, []);
 
   // Reveal the footer content shortly after it scrolls into view.

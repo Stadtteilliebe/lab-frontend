@@ -1,0 +1,179 @@
+/* Mirrors stadtteilliebe.de's header nav. On desktop it's an absolutely
+   positioned overlay (not fixed) with a soft dark scrim behind it, so it
+   blends into the hero's dark/white split and still scrolls away with the
+   page. On mobile — matching the real site's own mobile header — it's
+   pinned (fixed) with a sandwich menu instead of the inline links. */
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 96px;
+  padding: 0 clamp(24px, 5vw, 80px);
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  height: 160px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.22) 60%, transparent);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.left {
+  display: flex;
+  gap: 20px;
+  justify-self: start;
+}
+
+.center {
+  justify-self: center;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  justify-self: end;
+}
+
+/* Keep the header's own row (brand + burger/close button) above the
+   mobile menu backdrop once it opens — otherwise the near-opaque overlay
+   paints over the close button and it's effectively gone. */
+.left,
+.center,
+.right {
+  position: relative;
+  z-index: 2;
+}
+
+.link,
+.brand {
+  color: #fff;
+  text-decoration: none;
+}
+
+.link {
+  font-family: 'Averta', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.brand {
+  font-family: 'Averta', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ── Sandwich menu (mobile only) ─────────────────────────────────────────── */
+.burger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.burger span {
+  width: 16px;
+  height: 1.5px;
+  background: #fff;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.burgerOpen span:first-child {
+  transform: translateY(3.25px) rotate(45deg);
+}
+
+.burgerOpen span:last-child {
+  transform: translateY(-3.25px) rotate(-45deg);
+}
+
+.mobileMenu {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .header {
+    /* Stays position: absolute from the base rule — scrolls away with the
+       page just like on desktop, rather than staying pinned. */
+    height: 72px;
+    padding: 0 20px;
+  }
+
+  .header::before {
+    height: 120px;
+  }
+
+  .left {
+    display: none;
+  }
+
+  .right .link {
+    display: none;
+  }
+
+  .burger {
+    display: flex;
+  }
+
+  .brand {
+    font-size: 18px;
+  }
+
+  /* Full-width panel, not a centered modal — links start right below the
+     header and line up with the brand's own left edge, same layout as
+     stadtteilliebe.de's own mobile menu (just in our dark palette). */
+  .mobileMenu {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 22px;
+    padding: 128px clamp(24px, 8vw, 48px) 40px;
+    background: rgba(6, 6, 10, 0.98);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+  }
+
+  .mobileMenuOpen {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .mobileLink {
+    font-family: 'Averta', sans-serif;
+    font-size: 28px;
+    font-weight: 500;
+    color: #fff;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+    text-align: left;
+  }
+}

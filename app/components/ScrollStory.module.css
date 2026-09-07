@@ -335,3 +335,76 @@
   opacity: 0.7;
 }
 
+/* ── Mobile: stack text above the solar system instead of side-by-side —
+   the scroll-scrubbed steps and the sticky pin still work exactly the same,
+   just split by height instead of by width. ─────────────────────────────── */
+@media (max-width: 768px) {
+  .stickySection {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 44%) minmax(0, 56%);
+  }
+
+  .leftColumn {
+    grid-column: 1;
+    grid-row: 1;
+    justify-content: flex-start;
+    padding: 20px 20px 8px;
+  }
+
+  .rightColumn {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  /* Planet detail: scene takes over the whole sticky section (both rows)
+     behind the now-transparent text card, same idea as the desktop
+     column-spanning version. */
+  .rightColumnExpanded {
+    grid-column: 1;
+    grid-row: 1 / -1;
+  }
+
+  .stepTitle {
+    font-size: clamp(20px, 6.5vw, 28px);
+    margin-bottom: 10px;
+  }
+
+  .stepText {
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .textCard {
+    padding: 20px;
+    border-radius: 16px;
+    max-width: calc(100% - 8px);
+  }
+
+  .textCard .stepTitle {
+    font-size: 19px;
+  }
+
+  .firstPlanetBtn {
+    margin-top: 16px;
+    padding: 9px 18px;
+    font-size: 13px;
+  }
+
+  .planetNav {
+    margin-top: 16px;
+  }
+
+  .footer {
+    padding: 56px 20px;
+  }
+
+  .footerBrand {
+    font-size: clamp(32px, 11vw, 120px);
+    margin-top: clamp(72px, 14vh, 220px);
+  }
+
+  .siteFooter {
+    margin-top: clamp(72px, 14vh, 220px);
+  }
+}
+

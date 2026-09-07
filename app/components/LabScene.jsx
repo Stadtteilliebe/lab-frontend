@@ -10,18 +10,22 @@ const hotspotsData = [
   {
     title: 'Workshop & Strategie',
     text: 'Wir starten keine Projekte ohne Workshop.\nNicht, weil es „State of the Art" ist – sondern weil es die einzige Art ist, fundierte Entscheidungen zu treffen.\n\nIm Workshop klären wir, für wen wir arbeiten, was erreicht werden soll und woran wir Erfolg messen. Wir hören zu, fragen nach und strukturieren. Am Ende steht ein gemeinsames Bild – und eine klare Richtung.',
+    services: ['Design Sprints', 'Co-Creation', 'Ideation', 'Customer Journeys', 'Interviews', 'User Journeys'],
   },
   {
     title: 'Konzept & Branding',
     text: 'Wir entwickeln Marken, die nicht nur gut aussehen, sondern auch Orientierung geben und langfristig funktionieren. Nach innen wie nach außen.\n\nBranding beginnt für uns bei Haltung, Kontext und Ziel. Erst wenn klar ist, wofür ein Produkt oder Unternehmen steht, übersetzen wir das in Struktur, Sprache und Gestaltung.',
+    services: ['Markenstrategie', 'Produktstrategie', 'Branded Interactions', 'Proof of Concept', 'Visuelle Identität', 'Markenarchitektur'],
   },
   {
     title: 'UX / UI Design',
     text: 'Wir gestalten Oberflächen, die Entscheidungen für Nutzer*innen und für Teams erleichtern und komplexe Inhalte verständlich machen.\nDabei denken wir Design immer im Zusammenspiel von Inhalt, Funktion und technischer Realität.\n\nKlare Strukturen, nachvollziehbare Flows und Systeme, die auch in der Weiterentwicklung Bestand haben, sind bei uns Standard.',
+    services: ['UX / UI Design', 'User Flows', 'Prototyping', 'Testing', 'Design-Systeme', 'Dev Handover'],
   },
   {
     title: 'Development',
     text: 'Wir setzen digitale Lösungen technisch sauber und nachhaltig um.\nVon Websites bis zu komplexeren digitalen Anwendungen – immer mit Blick auf Performance, Wartbarkeit und Weiterentwicklung.\nDamit aus Konzepten funktionierende Produkte werden.',
+    services: ['Headless CMS', 'API-Driven Architecture', 'Serverless Hosting', 'Progressive Web Apps', 'Technische Dokumentation'],
   },
 ];
 
@@ -38,6 +42,8 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
   const sceneApiRef       = useRef(null);
   const selectedPlanetRef = useRef(null);
   const labelRefsArr      = useRef([]);
+  const subLabelRefsArr   = useRef([]);
+  const subLabelAnchorsRef = useRef(null);
   const onPlanetClickRef  = useRef(onPlanetClick);
 
   // Keep callback ref fresh without re-running the Three.js effect
@@ -136,6 +142,68 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
     });
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+    // Deterministic pseudo-random in [0, 1) — stable across frames/renders,
+    // just varies by seed, so the scattered layout below doesn't reshuffle
+    // every time it's recomputed.
+    const pseudoRandom = (seed) => {
+      const x = Math.sin(seed * 12.9898) * 43758.5453;
+      return x - Math.floor(x);
+    };
+
+    // Small, loosely scattered cluster of service labels right around the
+    // selected planet (not spread across the whole system) — the camera
+    // zooms in tight on just that planet, so the cluster has to stay small
+    // enough to all remain in frame together. Radius/angle/depth are jittered
+    // per label so it reads as an organic scatter rather than a neat ring.
+    // Sits roughly in the planet's own orbital plane. Computed once per
+    // selection, re-projected to 2D every frame as the camera moves.
+    const computeSubLabelAnchors = (planetIndex, count) => {
+      const cfg    = orbitsConfig[planetIndex];
+      const center = getOrbitPos(cfg, orbitAngles[planetIndex]);
+      const euler  = new THREE.Euler(cfg.tiltX, 0, cfg.tiltZ, 'XZY');
+      const basisA = new THREE.Vector3(1, 0, 0).applyEuler(euler);
+      const basisB = new THREE.Vector3(0, 1, 0).applyEuler(euler);
+      const basisC = new THREE.Vector3(0, 0, 1).applyEuler(euler);
+
+      // Jittered points in the local 2D (basisA/basisB) plane first...
+      const pts = [];
+      for (let j = 0; j < count; j++) {
+        const seed   = planetIndex * 101 + j * 17;
+        const angle  = (j / count) * Math.PI * 2 + (pseudoRandom(seed) - 0.5) * 1.3;
+        const radius = 0.5 + pseudoRandom(seed + 1) * 0.65;
+        pts.push({ x: Math.cos(angle) * radius, y: Math.sin(angle) * radius });
+      }
+
+      // ...then relaxed apart so labels (some much longer than others, e.g.
+      // "Proof of Concept" vs "Testing") don't end up sitting on top of
+      // each other — a few cheap pairwise-repulsion passes is enough.
+      const minDist = 0.6;
+      for (let iter = 0; iter < 8; iter++) {
+        for (let a = 0; a < pts.length; a++) {
+          for (let b = a + 1; b < pts.length; b++) {
+            const dx   = pts[b].x - pts[a].x;
+            const dy   = pts[b].y - pts[a].y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
+            if (dist < minDist) {
+              const push = (minDist - dist) / 2;
+              const nx = dx / dist, ny = dy / dist;
+              pts[a].x -= nx * push; pts[a].y -= ny * push;
+              pts[b].x += nx * push; pts[b].y += ny * push;
+            }
+          }
+        }
+      }
+
+      return pts.map((p, j) => {
+        const seed = planetIndex * 101 + j * 17;
+        const depthJitter = (pseudoRandom(seed + 2) - 0.5) * 0.5;
+        return center.clone()
+          .add(basisA.clone().multiplyScalar(p.x))
+          .add(basisB.clone().multiplyScalar(p.y))
+          .add(basisC.clone().multiplyScalar(depthJitter));
+      });
+    };
+
     const fadeMat = (mat, from, to, duration, onDone) => {
       const start = performance.now();
       mat.opacity = from;
@@ -246,12 +314,14 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
     const selectPlanet = (index) => {
       if (index === null || index === undefined) {
         selectedPlanetRef.current = null;
+        subLabelAnchorsRef.current = null;
         controls.enableZoom = false;
         resetCamera();
       } else {
         const mesh = hotspotMeshes[index];
         if (mesh?.visible) {
           selectedPlanetRef.current = index;
+          subLabelAnchorsRef.current = computeSubLabelAnchors(index, hotspotsData[index].services.length);
           controls.enableZoom = true;
           moveTo(mesh.position.clone());
         }
@@ -318,6 +388,18 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
         el.style.transform = `translate(calc(${sx}px - 50%), calc(${sy}px - 100% - 10px))`;
       });
 
+      // Service sub-labels (visible only while a planet is selected)
+      const anchors = subLabelAnchorsRef.current;
+      subLabelRefsArr.current.forEach((el, j) => {
+        if (!el) return;
+        if (!anchors || j >= anchors.length) { el.style.opacity = '0'; return; }
+        const ndc = anchors[j].clone().project(camera);
+        const sx  = ( ndc.x * 0.5 + 0.5) * cW;
+        const sy  = (-ndc.y * 0.5 + 0.5) * cH;
+        el.style.opacity   = ndc.z < 1 ? '1' : '0';
+        el.style.transform = `translate(calc(${sx}px - 50%), calc(${sy}px - 50%))`;
+      });
+
       controls.update();
       renderer.render(scene, camera);
     };
@@ -374,6 +456,15 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
           className={styles.orbitLabel}
         >
           {h.title}
+        </span>
+      ))}
+      {selectedPlanet !== null && selectedPlanet !== undefined && hotspotsData[selectedPlanet]?.services.map((service, j) => (
+        <span
+          key={service}
+          ref={el => { subLabelRefsArr.current[j] = el; }}
+          className={styles.subLabel}
+        >
+          {service}
         </span>
       ))}
     </div>
