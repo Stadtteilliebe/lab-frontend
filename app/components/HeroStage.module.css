@@ -27,10 +27,16 @@
 }
 
 .photo {
-  width: 100%;
+  /* Only the right half of the (full-width) slot is visible next to the
+     panel — sizing the photo to that half keeps the landscape image almost
+     uncropped instead of cutting a strip out of a full-width cover. */
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
   height: 100%;
   object-fit: cover;
-  object-position: center 30%;
+  object-position: center;
   display: block;
   color: transparent;
 }
@@ -39,6 +45,104 @@
   overflow: hidden;
   position: relative;
   background: #BAA2F9;
+}
+
+/* ── "direkt zu" jump points ────────────────────────────────────────────── */
+.jump {
+  display: flex;
+  flex-direction: column;
+  font-family: 'Averta', sans-serif;
+  color: #0a0a0a;
+  text-align: left;
+}
+
+/* bgGrid spans the full width under the panel, so the desktop list only
+   uses the right half — the part that's visible next to the white panel. */
+.jumpDesktop {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  right: 0;
+  justify-content: center;
+  padding: clamp(24px, 4vh, 34px) clamp(32px, 4vw, 56px);
+}
+
+.jumpMobile {
+  display: none;
+}
+
+.jumpLabel {
+  margin-bottom: 14px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #0a0a0a;
+}
+
+.jumpList {
+  border-top: 1px solid #0a0a0a;
+}
+
+.jumpItem {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  padding: clamp(9px, 1.6vh, 13px) 0;
+  border: 0;
+  border-bottom: 1px solid #0a0a0a;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: clamp(18px, 1.8vw, 26px);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Mini planet: a dot that gains a (solid) orbit ring on hover */
+.jumpDot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+
+.jumpDot::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #0a0a0a;
+}
+
+.jumpDot::after {
+  content: '';
+  position: absolute;
+  inset: 1px -6px;
+  border: 1.2px solid #0a0a0a;
+  border-radius: 50%;
+  transform: rotate(-18deg);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.jumpArrow {
+  flex: none;
+  margin-left: auto;
+  margin-right: 8px;
+  transition: transform 0.2s;
+}
+
+.jumpItem:hover .jumpDot::after {
+  opacity: 1;
+}
+
+.jumpItem:hover .jumpArrow {
+  transform: translateX(8px);
 }
 
 /* ── White panel: starts at 50%, grows to 100% ──────────────────────────── */
@@ -100,6 +204,12 @@
   gap: clamp(12px, 1.5vw, 18px);
   padding: clamp(40px, 5vw, 80px) clamp(32px, 4.5vw, 68px);
   text-align: center;
+  /* Covers the whole panel — let clicks through to the jump card below. */
+  pointer-events: none;
+}
+
+.layer2 > * {
+  pointer-events: auto;
 }
 
 .panelTitle {
@@ -123,6 +233,7 @@
   border-radius: 50%;
   border: 1.5px solid rgba(0, 0, 0, 0.5);
   background: transparent;
+  color: #0a0a0a;
   cursor: pointer;
   flex-shrink: 0;
   transition: border-color 0.2s, background 0.2s;
@@ -136,12 +247,36 @@
 @media (max-width: 768px) {
   .layer1,
   .layer2 {
-    padding: 24px 24px clamp(32px, 8vh, 56px);
+    padding: 24px 20px clamp(32px, 8vh, 56px);
+  }
+
+  /* Heading at the top (below the nav), jump card right underneath */
+  .layer1 {
+    justify-content: flex-start;
+    padding-top: clamp(92px, 13.5vh, 110px);
   }
 
   .panelHeading {
-    font-size: 26px;
+    font-size: 30px;
     margin-bottom: 14px;
+  }
+
+  .jumpMobile {
+    display: flex;
+    width: 100%;
+    margin-top: clamp(20px, 3.7vh, 30px);
+    padding: 18px 18px 6px;
+    border-radius: 16px;
+    background: #BAA2F9;
+  }
+
+  .jumpMobile .jumpItem {
+    gap: 12px;
+    font-size: 18px;
+  }
+
+  .jumpMobile .jumpItem:last-child {
+    border-bottom: 0;
   }
 
   .panelDesc {
@@ -151,5 +286,39 @@
 
   .panelTitle {
     font-size: calc(20px + var(--title-p, 0) * 8px);
+  }
+}
+
+/* Short phones (e.g. iPhone SE): tighten the stack so the jump card keeps
+   clear of "Unsere Leistungen" at the bottom. */
+@media (max-width: 768px) and (max-height: 720px) {
+  .layer1 {
+    padding-top: 88px;
+  }
+
+  .layer2 {
+    padding-bottom: 28px;
+  }
+
+  .panelHeading {
+    font-size: 26px;
+    margin-bottom: 10px;
+  }
+
+  .panelDesc {
+    line-height: 1.55;
+  }
+
+  .jumpMobile {
+    margin-top: 16px;
+    padding-top: 14px;
+  }
+
+  .jumpMobile .jumpLabel {
+    margin-bottom: 10px;
+  }
+
+  .jumpMobile .jumpItem {
+    padding: 7px 0;
   }
 }

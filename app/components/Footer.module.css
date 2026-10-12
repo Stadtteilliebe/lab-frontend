@@ -1,0 +1,127 @@
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(48px, 5vw, 72px);
+  padding: 90px 0 96px;
+  background: #06060a;
+  color: #ffffff;
+  font-family: 'Averta', sans-serif;
+}
+
+.columns,
+.bottom {
+  padding: 0 clamp(20px, 5.5vw, 80px);
+}
+
+/* ── Links / Connect / Contact ──────────────────────────────────────────── */
+/* Spread over the full width: first column at the left edge, last at the
+   right edge, the middle one with equal gaps to both. */
+.columns {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.link {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ── Marquee — same mechanics as on stadtteilliebe.de/projekte ──────────── */
+.marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 8px 0;
+}
+
+.marqueeTrack {
+  display: inline-block;
+  animation: marquee 80s linear infinite;
+}
+
+.marqueeItem {
+  display: inline-block;
+  padding-right: 0.6em;
+  font-size: clamp(56px, 7.8vw, 170px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  color: #9f9f9f;
+}
+
+@keyframes marquee {
+  0%   { transform: translate(0); }
+  100% { transform: translate(-50%); }
+}
+
+.tagline {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* ── Bottom row ─────────────────────────────────────────────────────────── */
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  font-size: 16px;
+}
+
+.legal {
+  display: flex;
+  gap: 36px;
+}
+
+.legal a {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.legal a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    gap: 40px;
+    padding: 56px 0 40px;
+  }
+
+  /* Compact: Links | Connect side by side, contact underneath on its own
+     row (the e-mail address is too long to share a row). */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px 20px;
+  }
+
+  .columns > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  .marqueeItem {
+    font-size: 44px;
+  }
+
+  .legal {
+    gap: 20px;
+  }
+}

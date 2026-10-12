@@ -1,62 +1,78 @@
-/* Mirrors stadtteilliebe.de's header nav. On desktop it's an absolutely
-   positioned overlay (not fixed) with a soft dark scrim behind it, so it
-   blends into the hero's dark/white split and still scrolls away with the
-   page. On mobile — matching the real site's own mobile header — it's
-   pinned (fixed) with a sandwich menu instead of the inline links. */
+/* Bar at the top of the page: brand left, links + contact button right,
+   over a very soft dark gradient on the stage. Slides up out of view once
+   the page scrolls (see Nav.jsx). */
 .header {
-  position: absolute;
+  --fade-height: 170px;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 50;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  height: 96px;
-  padding: 0 clamp(24px, 5vw, 80px);
-}
-
-.header::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  height: 160px;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.22) 60%, transparent);
+  /* Stays put while the bar slides away — don't block clicks there. */
   pointer-events: none;
-  z-index: -1;
 }
 
-.left {
-  display: flex;
-  gap: 20px;
-  justify-self: start;
+.bar,
+.mobileMenuOpen {
+  pointer-events: auto;
 }
 
-.center {
-  justify-self: center;
-}
-
-.right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  justify-self: end;
-}
-
-/* Keep the header's own row (brand + burger/close button) above the
-   mobile menu backdrop once it opens — otherwise the near-opaque overlay
-   paints over the close button and it's effectively gone. */
-.left,
-.center,
-.right {
+.bar {
   position: relative;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 88px;
+  padding: 0 clamp(24px, 3vw, 40px);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Far enough up that the gradient below the bar goes too */
+.barHidden {
+  transform: translateY(calc(-1 * var(--fade-height)));
+}
+
+/* Reaches well below the bar and fades out over many stops, so there's
+   no visible edge where it ends. */
+.bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--fade-height);
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.42) 0%,
+    rgba(0, 0, 0, 0.34) 16%,
+    rgba(0, 0, 0, 0.24) 34%,
+    rgba(0, 0, 0, 0.14) 54%,
+    rgba(0, 0, 0, 0.06) 73%,
+    rgba(0, 0, 0, 0.015) 89%,
+    transparent 100%
+  );
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 2vw, 28px);
+}
+
+/* Brand sits over the white panel, the links over the hero photo — each
+   gets the color that reads on what's behind it (mobile: all over white,
+   but the links are hidden there anyway). */
 .link,
 .brand {
-  color: #fff;
+  color: #0a0a0a;
   text-decoration: none;
+}
+
+.right .link {
+  color: #ffffff;
 }
 
 .link {
@@ -78,6 +94,25 @@
   letter-spacing: -0.02em;
 }
 
+/* Same button as "Planeten ansehen" in ScrollStory — white over the hero
+   photo (black on mobile, where the bar sits over the white panel). */
+.contactButton {
+  padding: 11px 22px;
+  background: #ffffff;
+  color: #0a0a0a;
+  border-radius: 999px;
+  font-family: 'Averta', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.contactButton:hover {
+  opacity: 0.75;
+}
+
 /* ── Sandwich menu (mobile only) ─────────────────────────────────────────── */
 .burger {
   display: none;
@@ -90,14 +125,14 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.06);
   cursor: pointer;
 }
 
 .burger span {
   width: 16px;
   height: 1.5px;
-  background: #fff;
+  background: #0a0a0a;
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
@@ -114,23 +149,24 @@
 }
 
 @media (max-width: 768px) {
-  .header {
-    /* Stays position: absolute from the base rule — scrolls away with the
-       page just like on desktop, rather than staying pinned. */
+  .bar {
     height: 72px;
     padding: 0 20px;
   }
 
-  .header::before {
-    height: 120px;
+  .right {
+    gap: 12px;
   }
 
-  .left {
+  .link {
     display: none;
   }
 
-  .right .link {
-    display: none;
+  .contactButton {
+    padding: 9px 18px;
+    background: #0a0a0a;
+    color: #ffffff;
+    font-size: 13px;
   }
 
   .burger {
@@ -141,9 +177,8 @@
     font-size: 18px;
   }
 
-  /* Full-width panel, not a centered modal — links start right below the
-     header and line up with the brand's own left edge, same layout as
-     stadtteilliebe.de's own mobile menu (just in our dark palette). */
+  /* Full-width panel below the bar, continuing its white — links line up
+     with the brand's left edge, like stadtteilliebe.de's own mobile menu. */
   .mobileMenu {
     position: fixed;
     inset: 0;
@@ -153,8 +188,8 @@
     align-items: flex-start;
     justify-content: flex-start;
     gap: 22px;
-    padding: 128px clamp(24px, 8vw, 48px) 40px;
-    background: rgba(6, 6, 10, 0.98);
+    padding: 112px 20px 40px;
+    background: #ffffff;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-8px);
@@ -171,7 +206,7 @@
     font-family: 'Averta', sans-serif;
     font-size: 28px;
     font-weight: 500;
-    color: #fff;
+    color: #0a0a0a;
     text-decoration: none;
     letter-spacing: -0.01em;
     text-align: left;

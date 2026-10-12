@@ -56,9 +56,16 @@
   position: absolute;
   top: -12px;
   left: 50%;
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.5);
   transform: translateX(-50%);
+}
+
+@media (max-width: 768px) {
+  .subLabel {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
 }
