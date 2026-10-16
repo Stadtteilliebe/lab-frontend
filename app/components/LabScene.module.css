@@ -12,6 +12,7 @@
   height: 100%;
 }
 
+/* Custom: planet names small and semibold (as before the text styles) */
 .orbitLabel {
   position: absolute;
   top: 0;
@@ -19,9 +20,9 @@
   opacity: 0;
   font-family: var(--font-family);
   font-size: 11px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.85);
-  letter-spacing: 0.06em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #ffffff;
   pointer-events: none;
   white-space: nowrap;
   will-change: transform, opacity;
@@ -29,22 +30,20 @@
 }
 
 /* Small pill labels scattered around the scene while a planet is
-   selected, naming the services within that category. */
+   selected, naming the services within that category. Caps style (14px,
+   white). */
 .subLabel {
+  composes: caps from '../typography.module.css';
   position: absolute;
   top: 0;
   left: 0;
   opacity: 0;
-  padding: 6px 14px;
+  padding: 3px 16px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(6, 6, 10, 0.55);
   backdrop-filter: blur(2px);
-  font-family: var(--font-family);
-  font-size: 12px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.85);
-  letter-spacing: 0.02em;
+  color: #ffffff;
   pointer-events: none;
   white-space: nowrap;
   will-change: transform, opacity;
@@ -69,6 +68,6 @@
   }
 
   .subLabel {
-    padding: 5px 12px;
+    padding: 2px 14px;
   }
 }

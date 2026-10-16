@@ -9,6 +9,7 @@ import styles from './ScrollStory.module.css';
 const STORY_STEPS = [
   {
     title: 'Der Kern unserer Leistungen',
+    underline: 'Kern',
     text: 'Hinter jeder guten Website und jedem digitalen Produkt stecken Kompetenzen, die ineinandergreifen. Bei uns sitzen sie in einem Team. Alles, was wir tun, dreht sich um einen gemeinsamen Kern: dein Projekt. Daran richten sich alle vier Leistungen aus.',
   },
   {
@@ -19,13 +20,10 @@ const STORY_STEPS = [
     title: 'Entdecke unsere Leistungen',
     text: 'Klicke auf einen der Planeten, um mehr über unsere Leistungen zu erfahren.',
     hint: true,
-    underline: true,
+    underline: 'Leistungen',
   },
 ];
 
-// Lilac hand-drawn stroke under the whole title. Draws itself left → right
-// once when the step appears (CSS animation, see .titleUnderline) — the
-// step content remounts on every step change, so it replays on arrival.
 // Scrolling back up out of the last step jumps straight to the first one
 // instead of making the reader scroll back through the whole story: after
 // this many px of upward scrolling in the last step, the page jumps to
@@ -34,6 +32,10 @@ const STORY_STEPS = [
 const JUMP_BACK_AFTER_PX = 60;
 const JUMP_BACK_PROGRESS = 0.15;
 
+// Lilac hand-drawn stroke under one word of the title (`underline` in
+// STORY_STEPS). Draws itself left → right once when the step appears (CSS
+// animation, see .titleUnderline) — the step content remounts on every
+// step change, so it replays on arrival.
 function TitleUnderline() {
   return (
     <svg className={styles.titleUnderline} viewBox="0 0 300 16" preserveAspectRatio="none" aria-hidden="true">
@@ -130,7 +132,8 @@ export default function ScrollStory() {
   const TitleTag  = hasPlanet ? 'h3' : 'h2';
   const leftText  = hasPlanet ? hotspotsData[clickedIndex].text  : STORY_STEPS[scrollStep].text;
   const showHint  = isInteractive && !hasPlanet;
-  const showUnderline = !hasPlanet && STORY_STEPS[scrollStep].underline;
+  const underlineWord = hasPlanet ? null : STORY_STEPS[scrollStep].underline;
+  const underlineAt   = underlineWord ? leftTitle.indexOf(underlineWord) : -1;
 
   const contentKey = `${scrollStep}-${clickedIndex ?? 'x'}`;
 
@@ -142,11 +145,15 @@ export default function ScrollStory() {
         <div ref={leftColumnRef} className={`${styles.leftColumn} ${hasPlanet ? styles.leftColumnClear : ''}`}>
           <div key={contentKey} className={`${styles.textContent} ${hasPlanet ? styles.textCard : ''}`}>
             <TitleTag className={styles.stepTitle}>
-              {showUnderline ? (
-                <span className={styles.underlined}>
-                  {leftTitle}
-                  <TitleUnderline />
-                </span>
+              {underlineAt >= 0 ? (
+                <>
+                  {leftTitle.slice(0, underlineAt)}
+                  <span className={styles.underlined}>
+                    {underlineWord}
+                    <TitleUnderline />
+                  </span>
+                  {leftTitle.slice(underlineAt + underlineWord.length)}
+                </>
               ) : leftTitle}
             </TitleTag>
             <p  className={styles.stepText}>{leftText}</p>
