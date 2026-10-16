@@ -1,0 +1,81 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: clamp(48px, 6vw, 96px) clamp(20px, 5.5vw, 80px) clamp(64px, 9vw, 128px);
+  background: #ffffff;
+  color: #0a0a0a;
+  text-align: center;
+}
+
+.title {
+  composes: h2 from '../typography.module.css';
+}
+
+.text {
+  composes: text from '../typography.module.css';
+  max-width: 640px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Same size and type as the other buttons ("Planeten ansehen") */
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 42px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+/* Purple from the stadtteilliebe CTA design */
+.primary {
+  background: #9B5EE7;
+  color: #ffffff;
+}
+
+.primary:hover {
+  opacity: 0.85;
+}
+
+.secondary {
+  border: 1.5px solid #0a0a0a;
+  color: #0a0a0a;
+}
+
+.secondary:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Sticker band: tiles horizontally, centered on the white → footer edge */
+.divider {
+  height: clamp(72px, 7.2vw, 140px);
+  background:
+    url('/images/divider.webp') center / auto 100% repeat-x,
+    linear-gradient(to bottom, #ffffff 50%, #06060a 50%);
+}
+
+@media (max-width: 768px) {
+  .primary,
+  .secondary {
+    height: 36px;
+    padding: 0 18px;
+    font-size: 14px;
+  }
+}

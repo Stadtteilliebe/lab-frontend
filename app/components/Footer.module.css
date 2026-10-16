@@ -5,7 +5,7 @@
   padding: 90px 0 96px;
   background: #06060a;
   color: #ffffff;
-  font-family: 'Averta', sans-serif;
+  font-family: var(--font-family);
 }
 
 .columns,
@@ -30,10 +30,8 @@
 }
 
 .link {
+  composes: text from '../typography.module.css';
   color: #ffffff;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.5;
   text-decoration: none;
 }
 
@@ -54,6 +52,7 @@
   animation: marquee 80s linear infinite;
 }
 
+/* Display size: no Figma text style */
 .marqueeItem {
   display: inline-block;
   padding-right: 0.6em;
@@ -70,18 +69,16 @@
 }
 
 .tagline {
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.4;
+  composes: h4 from '../typography.module.css';
   text-align: center;
 }
 
 /* ── Bottom row ─────────────────────────────────────────────────────────── */
 .bottom {
+  composes: text from '../typography.module.css';
   display: flex;
   justify-content: space-between;
   gap: 24px;
-  font-size: 16px;
 }
 
 .legal {

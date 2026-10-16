@@ -14,6 +14,55 @@
   font-display: swap;
 }
 
+/* ── Text styles — same as in Figma and on stadtteilliebe.de ─────────────
+   Desktop: h1 60/Auto · h2 48/Auto · h3 30/150% · h4 20/Auto ·
+            text 18/30 · caps 14/175%, tracking 20%
+   Mobile:  h1 30/Auto · h2 24/Auto · h3 20/Auto · h4 18/160% · text 14/160%
+            (text: Figma says Auto, ≈ 17px — too tight to read, so custom)
+   Caps are always plain black or white — never grey.
+   "Auto" is Figma's default line height, i.e. the font's own metrics —
+   `normal` in CSS (≈ 1.24 for Averta). Tracking and the breakpoint (lg,
+   1024px) are taken from stadtteilliebe.de. Used through the classes in
+   typography.module.css. */
+:root {
+  --font-family: 'Averta', sans-serif;
+  --tracking-heading: -0.2px;
+  --tracking-text: 0.2px;
+
+  --h1-size: 60px;
+  --h1-lh: normal;
+  --h2-size: 48px;
+  --h2-lh: normal;
+  --h3-size: 30px;
+  --h3-lh: 1.5;
+  --h4-size: 20px;
+  --h4-lh: normal;
+  --text-size: 18px;
+  --text-lh: 30px;
+  --caps-size: 14px;
+  --caps-lh: 1.75;
+  --tracking-caps: 0.2em;
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --h1-size: 30px;
+    --h2-size: 24px;
+    --h3-size: 20px;
+    --h3-lh: normal;
+    --h4-size: 18px;
+    --h4-lh: 1.6;
+    --text-size: 14px;
+    --text-lh: 1.6;
+  }
+}
+
+/* One corner radius for every card: planet cards, project cards, the lilac
+   boxes */
+:root {
+  --radius-card: 10px;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -30,6 +79,10 @@ body {
 body {
   overflow-y: auto;
   overflow-x: hidden;
+  /* Same as stadtteilliebe.de — without it, light text on dark renders
+     noticeably heavier on macOS. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,

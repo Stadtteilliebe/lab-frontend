@@ -2,8 +2,8 @@ import './globals.css';
 import Nav from './components/Nav';
 
 export const metadata = {
-  title: 'Unsere Leistungen',
-  description: 'Interactive Stadtteilliebe Lab experiment.',
+  title: 'Der Kern unserer Leistungen | Stadtteilliebe',
+  description: 'Strategie, Branding, UX/UI-Design und Webentwicklung aus einem Team. Wie die Leistungen zusammenhängen und wie du deinen Einstieg findest.',
 };
 
 export default function RootLayout({ children }) {

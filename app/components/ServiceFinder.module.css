@@ -1,0 +1,148 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 3vw, 40px);
+  padding: clamp(64px, 9vw, 128px) clamp(20px, 5.5vw, 80px);
+  background: #ffffff;
+  color: #0a0a0a;
+}
+
+/* ── Heading + intro ────────────────────────────────────────────────────── */
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 760px;
+}
+
+.title {
+  composes: h3 from '../typography.module.css';
+}
+
+.intro {
+  composes: text from '../typography.module.css';
+}
+
+.situation {
+  composes: text from '../typography.module.css';
+}
+
+.start {
+  vertical-align: middle;
+}
+
+/* ── Situations → service, in the same black-line style as the jump list ── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.colHead {
+  composes: caps from '../typography.module.css';
+  padding: 0 0 14px;
+  font-weight: 400;
+  color: #0a0a0a;
+}
+
+.colHead:first-child,
+.situation {
+  width: 50%;
+  padding-right: 32px;
+}
+
+.table td {
+  padding-top: 22px;
+  padding-bottom: 22px;
+  border-top: 1px solid #0a0a0a;
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 1px solid #0a0a0a;
+}
+
+/* Quicklinks: underlined service names, side by side */
+.quicklink {
+  composes: text from '../typography.module.css';
+  font-weight: 600;
+  color: #0a0a0a;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 5px;
+  cursor: pointer;
+}
+
+/* "oder" between two quicklinks, in normal weight */
+.or {
+  composes: text from '../typography.module.css';
+  white-space: pre;
+}
+
+/* ── "Erst die Marke oder gleich die Website?" — the lilac answer box ──── */
+.answer {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 32px;
+  margin-top: 16px;
+  padding: clamp(28px, 4vw, 56px);
+  border-radius: var(--radius-card);
+  background: #BAA2F9;
+}
+
+.question {
+  composes: h3 from '../typography.module.css';
+}
+
+.answerText {
+  composes: text from '../typography.module.css';
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.answerText a {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Mobile: each situation becomes a block, its service right underneath */
+@media (max-width: 768px) {
+  .table thead {
+    display: none;
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+    width: 100%;
+  }
+
+  .table tr {
+    padding: 16px 0;
+    border-top: 1px solid #0a0a0a;
+  }
+
+  .table tbody tr:last-child {
+    border-bottom: 1px solid #0a0a0a;
+  }
+
+  .table td,
+  .table tbody tr:last-child td {
+    padding: 0;
+    border: 0;
+  }
+
+  .start {
+    margin-top: 6px;
+  }
+
+  .answer {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}

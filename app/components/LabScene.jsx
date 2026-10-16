@@ -10,22 +10,22 @@ const hotspotsData = [
   {
     title: 'Strategy',
     text: 'Wir starten keine Projekte ohne Workshop.\nNicht, weil es „State of the Art" ist – sondern weil es die einzige Art ist, fundierte Entscheidungen zu treffen.\n\nIm Workshop klären wir, für wen wir arbeiten, was erreicht werden soll und woran wir Erfolg messen. Wir hören zu, fragen nach und strukturieren. Am Ende steht ein gemeinsames Bild – und eine klare Richtung.',
-    services: ['Design Sprints', 'Co-Creation', 'Ideation', 'Customer Journeys', 'Interviews', 'User Journeys'],
+    services: ['Strategie-Workshop', 'Branding-Workshop', 'Personas', 'Customer Journey', 'Roadmap'],
   },
   {
     title: 'Identity',
     text: 'Wir entwickeln Marken, die nicht nur gut aussehen, sondern auch Orientierung geben und langfristig funktionieren. Nach innen wie nach außen.\n\nBranding beginnt für uns bei Haltung, Kontext und Ziel. Erst wenn klar ist, wofür ein Produkt oder Unternehmen steht, übersetzen wir das in Struktur, Sprache und Gestaltung.',
-    services: ['Markenstrategie', 'Produktstrategie', 'Branded Interactions', 'Proof of Concept', 'Visuelle Identität', 'Markenarchitektur'],
+    services: ['Positionierung', 'Markenkern', 'Naming', 'Messaging', 'Corporate Design'],
   },
   {
     title: 'Experience',
     text: 'Wir gestalten Oberflächen, die Entscheidungen für Nutzer*innen und für Teams erleichtern und komplexe Inhalte verständlich machen.\nDabei denken wir Design immer im Zusammenspiel von Inhalt, Funktion und technischer Realität.\n\nKlare Strukturen, nachvollziehbare Flows und Systeme, die auch in der Weiterentwicklung Bestand haben, sind bei uns Standard.',
-    services: ['UX / UI Design', 'User Flows', 'Prototyping', 'Testing', 'Design-Systeme', 'Dev Handover'],
+    services: ['Informationsarchitektur', 'UX/UI-Design', 'Prototypen', 'Design System', 'Barrierefreiheit'],
   },
   {
     title: 'Engineering',
     text: 'Wir setzen digitale Lösungen technisch sauber und nachhaltig um.\nVon Websites bis zu komplexeren digitalen Anwendungen – immer mit Blick auf Performance, Wartbarkeit und Weiterentwicklung.\nDamit aus Konzepten funktionierende Produkte werden.',
-    services: ['Headless CMS', 'API-Driven Architecture', 'Serverless Hosting', 'Progressive Web Apps', 'Technische Dokumentation'],
+    services: ['Websites', 'Web-Apps', 'Headless CMS', 'Relaunch'],
   },
 ];
 
@@ -38,7 +38,7 @@ const orbitsConfig = [
 
 // Manual screen-space nudges (px) for service pills that still crowd a
 // neighbour in the desktop scatter.
-const PILL_NUDGE_Y = { 'Proof of Concept': -15 };
+const PILL_NUDGE_Y = {};
 
 const BASE_CAM_DISTANCE = 20;
 const TAN_HALF_FOV      = Math.tan((55 / 2) * Math.PI / 180);
@@ -48,42 +48,59 @@ const TAN_HALF_FOV      = Math.tan((55 / 2) * Math.PI / 180);
 // orbit is 6.3, plus room for its label), and the image is shifted down so
 // the system sits below the text instead of behind it.
 const MOBILE_HALF_WIDTH  = 7.6;
-const MOBILE_VIEW_SHIFT  = 0.1;    // fraction of canvas height
-const MOBILE_PILL_RY     = 118;    // px, vertical radius of the pill ellipse
+const MOBILE_VIEW_SHIFT  = 0.1;    // min. shift, fraction of canvas height (see updateViewShift)
+const MOBILE_NAV_SPACE   = 92;     // px kept free at the bottom for the planet arrows
 
-// Lays out a selected planet's service pills on a small ellipse around it
-// (screen space, mobile only) and nudges them apart vertically until no
-// pill overlaps another or the planet, while staying inside the canvas.
-const layoutMobilePills = (els, containerWidth, ry) => {
-  const n  = els.length;
-  const rx = Math.min(containerWidth * 0.3, 120);
+// Mobile: fits a selected planet's service pills into the free space around
+// it. Starts from the same scattered, tilted 3D anchors as desktop, seen
+// from the zoomed-in camera (offsets: px relative to the planet), stretches
+// that shape to the width and to the space between card and arrows (top/
+// bottom: px limits relative to the planet), then moves each pill to the
+// nearest spot where it overlaps neither another pill nor the planet.
+// Returns the stretch factors plus a per-pill correction, so the render loop can keep projecting the anchors
+// every frame — the pills swing in with the camera like on desktop and
+// land exactly on this layout once the zoom has finished.
+const layoutMobilePills = (els, offsets, containerWidth, top, bottom) => {
+  const margin = 12;
   const planetHalf = 40;
-  const pts = els.map((el, j) => {
-    const a = -Math.PI / 2 + (j / n) * Math.PI * 2;
-    const w = el.offsetWidth, h = el.offsetHeight;
-    const maxX = containerWidth / 2 - w / 2 - 12;
-    return { x: Math.max(-maxX, Math.min(maxX, Math.cos(a) * rx)), y: Math.sin(a) * ry, w, h };
-  });
-  const separate = (a, b, bw, bh, moveB) => {
-    const dx = b.x - a.x, dy = b.y - a.y;
-    const ox = (a.w + bw) / 2 + 8 - Math.abs(dx);
-    const oy = (a.h + bh) / 2 + 10 - Math.abs(dy);
-    if (ox <= 0 || oy <= 0) return;
-    const dir = dy === 0 ? (a.y >= 0 ? -1 : 1) : Math.sign(dy);
-    if (moveB) { a.y -= dir * oy / 2; b.y += dir * oy / 2; }
-    else a.y -= dir * oy;
-  };
-  // Clamping each pass keeps the cluster inside ±ry (so it can't creep up
-  // into the card); the pill that hits the bound stays and the other moves.
-  const planet = { x: 0, y: 0 };
-  for (let iter = 0; iter < 40; iter++) {
-    for (let a = 0; a < n; a++) {
-      for (let b = a + 1; b < n; b++) separate(pts[a], pts[b], pts[b].w, pts[b].h, true);
-      separate(pts[a], planet, planetHalf * 2, planetHalf * 2, false);
+  const pts = els.map((el, j) => ({ x: offsets[j].x, y: offsets[j].y, w: el.offsetWidth, h: el.offsetHeight }));
+  const maxX = p => containerWidth / 2 - p.w / 2 - margin;
+  const fit = (lim, v) => (Math.abs(v) > 1 ? lim / Math.abs(v) : Infinity);
+  const sx = Math.min(...pts.map(p => fit(maxX(p), p.x)));
+  const sy = Math.min(...pts.map(p => fit(p.y < 0 ? -top - p.h / 2 : bottom - p.h / 2, p.y)));
+
+  // Place pills one by one: each takes the free spot nearest to its target
+  // (searching outwards in rings) that keeps a gap to the planet and to the
+  // pills already placed, inside the free space.
+  const gapX = 14, gapY = 12;
+  const planet = { x: 0, y: 0, w: planetHalf * 2, h: planetHalf * 2 };
+  const placedSoFar = [planet];
+  const inBounds = (p, x, y) => Math.abs(x) <= maxX(p) && y >= top + p.h / 2 && y <= bottom - p.h / 2;
+  const isFree = (p, x, y) => placedSoFar.every(q => (
+    Math.abs(x - q.x) >= (p.w + q.w) / 2 + gapX || Math.abs(y - q.y) >= (p.h + q.h) / 2 + gapY
+  ));
+  const placed = pts.map(p => {
+    const tx = Math.max(-maxX(p), Math.min(maxX(p), p.x * sx));
+    const ty = Math.max(top + p.h / 2, Math.min(bottom - p.h / 2, p.y * sy));
+    let spot = { x: tx, y: ty };
+    search:
+    for (let r = 0; r <= 240; r += 6) {
+      const steps = r === 0 ? 1 : 24;
+      for (let k = 0; k < steps; k++) {
+        const a = (k / steps) * Math.PI * 2;
+        const x = tx + Math.cos(a) * r, y = ty + Math.sin(a) * r;
+        if (inBounds(p, x, y) && isFree(p, x, y)) { spot = { x, y }; break search; }
+      }
     }
-    pts.forEach(p => { p.y = Math.max(-ry, Math.min(ry, p.y)); });
-  }
-  return pts;
+    const result = { ...p, ...spot };
+    placedSoFar.push(result);
+    return result;
+  });
+  return {
+    sx,
+    sy,
+    deltas: placed.map((p, j) => ({ x: p.x - pts[j].x * sx, y: p.y - pts[j].y * sy })),
+  };
 };
 
 // topInsetRef (mobile): element covering the top of the canvas (text/card) —
@@ -144,6 +161,7 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
 
     renderer.domElement.addEventListener('pointerdown', () => { if (currentStep >= 2) controls.autoRotate = false; });
     let mobilePillLayout = null;
+    let pillCamPose = null;   // mobile: where moveTo's zoom ends (see layoutMobilePills)
 
     // Lighting
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
@@ -280,14 +298,13 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
     // gestures to the page (OrbitControls sets touch-action: none, which
     // otherwise blocks scrolling over the whole canvas).
     // Rotate/zoom only from step 2 on, so scrolling through the first two
-    // steps can never grab the scene. Zoom: on desktop only with a planet
-    // open (the wheel would fight page scroll); on mobile pinch is free, so
-    // it's on for the whole step. Mobile keeps touch-action pan-y — vertical
-    // swipes still scroll the page, horizontal ones rotate.
+    // steps can never grab the scene. Zoom only with a planet open (the
+    // wheel would fight page scroll). Mobile can't be dragged or pinched at
+    // all — taps still open planets, swipes only scroll the page.
     const applyInteraction = () => {
-      const interactive = currentStep >= 2;
+      const interactive = currentStep >= 2 && !mq.matches;
       controls.enableRotate = interactive;
-      controls.enableZoom   = interactive && (mq.matches || selectedPlanetRef.current !== null);
+      controls.enableZoom   = interactive && selectedPlanetRef.current !== null;
     };
 
     const fitView = () => {
@@ -299,8 +316,11 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
         : BASE_CAM_DISTANCE;
       defaultCamPos.set(0, 2, BASE_CAM_DISTANCE).multiplyScalar(dist / BASE_CAM_DISTANCE);
       controls.maxDistance = Math.max(32, dist * 1.2);
-      if (mobile) camera.setViewOffset(cw, ch, 0, -ch * MOBILE_VIEW_SHIFT, cw, ch);
-      else camera.clearViewOffset();
+      if (mobile) {
+        updateViewShift();
+        viewShift = viewShiftTarget;
+        camera.setViewOffset(cw, ch, 0, -viewShift, cw, ch);
+      } else camera.clearViewOffset();
       renderer.domElement.style.touchAction = mobile ? 'pan-y' : 'none';
       applyInteraction();
       mobilePillLayout = null;
@@ -345,21 +365,36 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
         // Lift (in units of distance) that lands the planet at planetScreenY(),
         // on top of the view offset that already shifts everything down.
         const cH   = container.clientHeight;
-        const lift = (planetScreenY() - cH / 2 - cH * MOBILE_VIEW_SHIFT) * 2 * TAN_HALF_FOV / cH;
+        const lift = (planetScreenY() - cH / 2 - viewShiftTarget) * 2 * TAN_HALF_FOV / cH;
         const upVec = new THREE.Vector3().crossVectors(rightVec, forward).normalize();
         newTarget = targetPos.clone().add(upVec.multiplyScalar(distance * lift));
       } else {
         newTarget = targetPos.clone().sub(rightVec.multiplyScalar(distance * 0.42));
       }
+      pillCamPose = { pos: newCamPos, target: newTarget };
       animateCam(camera.position.clone(), controls.target.clone(), newCamPos, newTarget, 900);
     };
 
-    // Mobile: middle of the free space below the text card (read at call
-    // time — the card has just re-rendered for the newly selected planet).
+    // Mobile: middle of the free space between the text card and the planet
+    // arrows (read at call time — the card has just re-rendered for the
+    // newly selected planet).
     const topInset      = () => topInsetRef?.current?.offsetHeight ?? 0;
+
+    // Mobile overview: shifts the image down (px) so the system sits in the
+    // middle of the free space below the step text — whose height changes
+    // per step — but never less than MOBILE_VIEW_SHIFT. Eased towards the
+    // target in the render loop. Frozen while a planet is open, since
+    // moveTo's framing is computed against it.
+    let viewShift = 0;
+    let viewShiftTarget = 0;
+    const updateViewShift = () => {
+      if (!mq.matches || selectedPlanetRef.current !== null) return;
+      const ch = container.clientHeight;
+      viewShiftTarget = Math.max(ch * MOBILE_VIEW_SHIFT, topInset() / 2);
+    };
     const planetScreenY = () => {
       const inset = topInset();
-      return inset + (container.clientHeight - inset) / 2;
+      return inset + (container.clientHeight - inset - MOBILE_NAV_SPACE) / 2;
     };
 
     const resetCamera = () => {
@@ -426,6 +461,7 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       if (index === null || index === undefined) {
         selectedPlanetRef.current = null;
         subLabelAnchorsRef.current = null;
+        updateViewShift();
         applyInteraction();
         resetCamera();
       } else {
@@ -483,6 +519,11 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
 
       const anySelected = selectedPlanetRef.current !== null;
 
+      if (mq.matches && Math.abs(viewShiftTarget - viewShift) > 0.5) {
+        viewShift += (viewShiftTarget - viewShift) * Math.min(1, delta * 6);
+        camera.setViewOffset(container.clientWidth, container.clientHeight, 0, -viewShift, container.clientWidth, container.clientHeight);
+      }
+
       // Planets stay frozen at startAngle positions — no continuous orbit animation
 
       // Labels (visible only in step 2+ when nothing selected)
@@ -503,21 +544,40 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       // Service sub-labels (visible only while a planet is selected)
       const anchors = subLabelAnchorsRef.current;
       if (mq.matches && anchors && selectedPlanetRef.current !== null) {
-        // Mobile: too narrow for the 3D scatter — pills sit on a small
-        // ellipse around the planet's screen position instead.
+        // Mobile: the raw 3D scatter is too wide for the screen — the same
+        // scatter, fitted into the free space (see layoutMobilePills).
         const els = subLabelRefsArr.current.slice(0, anchors.length);
-        if (!mobilePillLayout && els.length === anchors.length && els.every(el => el?.offsetWidth)) {
-          const ry = Math.min(MOBILE_PILL_RY, (cH - topInset()) / 2 - 30);
-          mobilePillLayout = layoutMobilePills(els, cW, ry);
+        const planetPos = hotspotMeshes[selectedPlanetRef.current].position;
+        // Anchor offsets from the planet in px, as seen from camera `cam`
+        const offsetsFrom = (cam) => {
+          const c = planetPos.clone().project(cam);
+          return anchors.map(a => {
+            const n = a.clone().project(cam);
+            return { x: (n.x - c.x) * 0.5 * cW, y: -(n.y - c.y) * 0.5 * cH };
+          });
+        };
+        if (!mobilePillLayout && pillCamPose && els.length === anchors.length && els.every(el => el?.offsetWidth)) {
+          const endCam = camera.clone();
+          endCam.position.copy(pillCamPose.pos);
+          endCam.lookAt(pillCamPose.target);
+          endCam.updateMatrixWorld();
+          const planetY = planetScreenY();
+          mobilePillLayout = layoutMobilePills(
+            els, offsetsFrom(endCam), cW, topInset() + 8 - planetY, cH - MOBILE_NAV_SPACE - planetY,
+          );
         }
-        const ndc = hotspotMeshes[selectedPlanetRef.current].position.clone().project(camera);
+        const ndc = planetPos.clone().project(camera);
         const px  = ( ndc.x * 0.5 + 0.5) * cW;
         const py  = (-ndc.y * 0.5 + 0.5) * cH;
+        const offsets = mobilePillLayout && offsetsFrom(camera);
         els.forEach((el, j) => {
           if (!el) return;
-          const p = mobilePillLayout?.[j];
-          el.style.opacity   = p ? '1' : '0';
-          if (p) el.style.transform = `translate(calc(${px + p.x}px - 50%), calc(${py + p.y}px - 50%))`;
+          el.style.opacity = mobilePillLayout ? '1' : '0';
+          if (!mobilePillLayout) return;
+          const { sx, sy, deltas } = mobilePillLayout;
+          const x = px + offsets[j].x * sx + deltas[j].x;
+          const y = py + offsets[j].y * sy + deltas[j].y;
+          el.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%))`;
         });
       } else subLabelRefsArr.current.forEach((el, j) => {
         if (!el) return;
@@ -544,12 +604,16 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       fitView();
     });
     resizeObserver.observe(container);
+    // Step text / card height changes → re-center the mobile overview
+    const insetObserver = new ResizeObserver(updateViewShift);
+    if (topInsetRef?.current) insetObserver.observe(topInsetRef.current);
     mq.addEventListener('change', fitView);
     fitView();
 
     return () => {
       cancelAnimationFrame(frameId);
       resizeObserver.disconnect();
+      insetObserver.disconnect();
       mq.removeEventListener('change', fitView);
       canvas.removeEventListener('click', handleClick);
       controls.dispose();

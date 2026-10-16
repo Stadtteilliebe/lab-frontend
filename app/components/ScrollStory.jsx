@@ -3,38 +3,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Arrow from './Arrow';
 import LabScene from './LabScene';
+import { hotspotsData } from './services';
 import styles from './ScrollStory.module.css';
-
-export const hotspotsData = [
-  {
-    title: 'Strategy',
-    text: 'Wir starten keine Projekte ohne Workshop.\nNicht, weil es „State of the Art" ist – sondern weil es die einzige Art ist, fundierte Entscheidungen zu treffen.\n\nIm Workshop klären wir, für wen wir arbeiten, was erreicht werden soll und woran wir Erfolg messen. Am Ende steht ein gemeinsames Bild – und eine klare Richtung.',
-  },
-  {
-    title: 'Identity',
-    text: 'Wir entwickeln Marken, die nicht nur gut aussehen, sondern auch Orientierung geben und langfristig funktionieren. Nach innen wie nach außen.\n\nBranding beginnt für uns bei Haltung, Kontext und Ziel. Erst wenn klar ist, wofür ein Produkt steht, übersetzen wir das in Struktur, Sprache und Gestaltung.',
-  },
-  {
-    title: 'Experience',
-    text: 'Wir gestalten Oberflächen, die Entscheidungen für Nutzer*innen erleichtern und komplexe Inhalte verständlich machen.\n\nKlare Strukturen, nachvollziehbare Flows und Systeme, die auch in der Weiterentwicklung Bestand haben, sind bei uns Standard.',
-  },
-  {
-    title: 'Engineering',
-    text: 'Wir setzen digitale Lösungen technisch sauber und nachhaltig um.\nVon Websites bis zu komplexeren digitalen Anwendungen – immer mit Blick auf Performance, Wartbarkeit und Weiterentwicklung.\n\nDamit aus Konzepten funktionierende Produkte werden.',
-  },
-];
 
 const STORY_STEPS = [
   {
-    title: 'So arbeiten wir',
-    text: 'Hinter jedem großen Produkt stecken Kompetenzen, die ineinandergreifen. Was wir tun – und wie wir es tun – dreht sich um einen gemeinsamen Kern.',
+    title: 'Der Kern unserer Leistungen',
+    text: 'Hinter jeder guten Website und jedem digitalen Produkt stecken Kompetenzen, die ineinandergreifen. Bei uns sitzen sie in einem Team. Alles, was wir tun, dreht sich um einen gemeinsamen Kern: dein Projekt. Daran richten sich alle vier Leistungen aus.',
   },
   {
-    title: 'Wir starten\ngemeinsam',
-    text: 'Aus einem gemeinsamen Kern entsteht alles, was trägt. Strategie, Gestaltung und Entwicklung entfalten ihre Wirkung erst dann vollständig, wenn sie von Anfang an auf dieselbe Mitte ausgerichtet sind.',
+    title: 'So greift alles ineinander',
+    text: 'Meist bauen die Leistungen aufeinander auf: In der Strategie klären wir Richtung und Prioritäten, daraus entsteht deine Marke. Im UX/UI-Design bekommt sie Struktur und Oberfläche, die Webentwicklung bringt alles live. Jede Leistung ist auch einzeln buchbar.',
   },
   {
-    title: 'Unsere Leistungen',
+    title: 'Entdecke unsere Leistungen',
     text: 'Klicke auf einen der Planeten, um mehr über unsere Leistungen zu erfahren.',
     hint: true,
     underline: true,
@@ -44,6 +26,14 @@ const STORY_STEPS = [
 // Lilac hand-drawn stroke under the whole title. Draws itself left → right
 // once when the step appears (CSS animation, see .titleUnderline) — the
 // step content remounts on every step change, so it replays on arrival.
+// Scrolling back up out of the last step jumps straight to the first one
+// instead of making the reader scroll back through the whole story: after
+// this many px of upward scrolling in the last step, the page jumps to
+// JUMP_BACK_PROGRESS — inside step 1, with room above so trackpad/touch
+// momentum doesn't carry on straight into the hero.
+const JUMP_BACK_AFTER_PX = 60;
+const JUMP_BACK_PROGRESS = 0.15;
+
 function TitleUnderline() {
   return (
     <svg className={styles.titleUnderline} viewBox="0 0 300 16" preserveAspectRatio="none" aria-hidden="true">
@@ -52,15 +42,45 @@ function TitleUnderline() {
   );
 }
 
+// ← counter → — rendered twice: in the left column under the card (desktop)
+// and pinned to the bottom of the screen (mobile), see .planetNavMobile.
+function PlanetNav({ index, setIndex, className }) {
+  return (
+    <nav className={`${styles.planetNav} ${className}`}>
+      <button
+        className={styles.navButton}
+        aria-label="Vorheriger Planet"
+        onClick={() => setIndex(i => (i === 0 ? null : i - 1))}
+      >
+        <Arrow direction="left" width={13} />
+      </button>
+      <span className={styles.navCounter}>
+        {index + 1} von {hotspotsData.length}
+      </span>
+      <button
+        className={styles.navButton}
+        aria-label="Nächster Planet"
+        onClick={() => setIndex(i => (
+          i === hotspotsData.length - 1 ? null : i + 1
+        ))}
+      >
+        <Arrow width={13} />
+      </button>
+    </nav>
+  );
+}
+
 export default function ScrollStory() {
   const [scrollStep, setScrollStep]       = useState(0);
   const [step1Progress, setStep1Progress] = useState(0);
   const [clickedIndex, setClickedIndex]   = useState(null);
   const storyRef  = useRef(null);
-  const pendingPlanetRef = useRef(null);
   const leftColumnRef = useRef(null);
 
   useEffect(() => {
+    let lastY = window.scrollY;
+    let scrolledUp = 0;
+
     const handleScroll = () => {
       if (!storyRef.current) return;
       const rect          = storyRef.current.getBoundingClientRect();
@@ -70,6 +90,20 @@ export default function ScrollStory() {
       const progress  = Math.max(0, Math.min(1, scrolled / scrollableRange));
       const stepSize  = 1 / STORY_STEPS.length;
       const step      = Math.min(STORY_STEPS.length - 1, Math.floor(progress * STORY_STEPS.length));
+
+      // Upward scrolling while the last step is pinned on screen (from the
+      // step itself or coming back up from the footer)
+      const dy = window.scrollY - lastY;
+      lastY = window.scrollY;
+      const lastStepOnScreen = step === STORY_STEPS.length - 1 && rect.bottom >= window.innerHeight;
+      scrolledUp = lastStepOnScreen && dy < 0 ? scrolledUp - dy : 0;
+      if (scrolledUp > JUMP_BACK_AFTER_PX) {
+        scrolledUp = 0;
+        window.scrollTo({ top: storyRef.current.offsetTop + scrollableRange * JUMP_BACK_PROGRESS, behavior: 'instant' });
+        handleScroll(); // update the step right away for the new position
+        return;
+      }
+
       const s1p       = Math.max(0, Math.min(1, (progress - stepSize) / stepSize));
       setScrollStep(step);
       setStep1Progress(s1p);
@@ -79,31 +113,10 @@ export default function ScrollStory() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Clear selection when leaving the interactive zone — unless a jump point
-  // from HeroStage is waiting to open its planet once step 2 is reached.
-  // Runs after LabScene's own step-2 transition (child effects run first),
-  // so its reset to "nothing selected" doesn't override the pending planet.
+  // Clear selection when leaving the interactive zone
   useEffect(() => {
-    if (scrollStep < 2) {
-      if (pendingPlanetRef.current === null) setClickedIndex(null);
-    } else if (pendingPlanetRef.current !== null) {
-      setClickedIndex(pendingPlanetRef.current);
-      pendingPlanetRef.current = null;
-    }
+    if (scrollStep < 2) setClickedIndex(null);
   }, [scrollStep]);
-
-  // "direkt zu" jump points in HeroStage: scroll to the end of the story
-  // (where planets are clickable), then open the chosen one.
-  useEffect(() => {
-    const onOpenPlanet = (e) => {
-      const el = storyRef.current;
-      if (!el) return;
-      pendingPlanetRef.current = e.detail;
-      window.scrollTo({ top: el.offsetTop + el.offsetHeight - window.innerHeight, behavior: 'smooth' });
-    };
-    window.addEventListener('open-planet', onOpenPlanet);
-    return () => window.removeEventListener('open-planet', onOpenPlanet);
-  }, []);
 
   const handlePlanetClick = useCallback((index) => {
     setClickedIndex(index);
@@ -112,7 +125,9 @@ export default function ScrollStory() {
   const isInteractive = scrollStep >= 2;
   const hasPlanet     = isInteractive && clickedIndex !== null;
 
-  const leftTitle = hasPlanet ? hotspotsData[clickedIndex].title : STORY_STEPS[scrollStep].title;
+  const leftTitle = hasPlanet ? hotspotsData[clickedIndex].heading : STORY_STEPS[scrollStep].title;
+  // Planet teasers sit one level below the step headings
+  const TitleTag  = hasPlanet ? 'h3' : 'h2';
   const leftText  = hasPlanet ? hotspotsData[clickedIndex].text  : STORY_STEPS[scrollStep].text;
   const showHint  = isInteractive && !hasPlanet;
   const showUnderline = !hasPlanet && STORY_STEPS[scrollStep].underline;
@@ -126,15 +141,23 @@ export default function ScrollStory() {
         {/* ── Left: text panel ── */}
         <div ref={leftColumnRef} className={`${styles.leftColumn} ${hasPlanet ? styles.leftColumnClear : ''}`}>
           <div key={contentKey} className={`${styles.textContent} ${hasPlanet ? styles.textCard : ''}`}>
-            <h2 className={styles.stepTitle}>
+            <TitleTag className={styles.stepTitle}>
               {showUnderline ? (
                 <span className={styles.underlined}>
                   {leftTitle}
                   <TitleUnderline />
                 </span>
               ) : leftTitle}
-            </h2>
+            </TitleTag>
             <p  className={styles.stepText}>{leftText}</p>
+            {hasPlanet && (
+              <p className={`${styles.stepText} ${styles.stepFit}`}>Sinnvoll, wenn: {hotspotsData[clickedIndex].fit}</p>
+            )}
+            {hasPlanet && (
+              <a className={styles.moreButton} href={hotspotsData[clickedIndex].href ?? undefined}>
+                Mehr zu {hotspotsData[clickedIndex].title}
+              </a>
+            )}
             {showHint && (
               <button
                 className={styles.firstPlanetBtn}
@@ -146,29 +169,13 @@ export default function ScrollStory() {
           </div>
 
           {hasPlanet && (
-            <nav className={styles.planetNav}>
-              <button
-                className={styles.navButton}
-                aria-label="Vorheriger Planet"
-                onClick={() => setClickedIndex(i => (i - 1 + hotspotsData.length) % hotspotsData.length)}
-              >
-                <Arrow direction="left" width={13} />
-              </button>
-              <span className={styles.navCounter}>
-                {clickedIndex + 1} von {hotspotsData.length}
-              </span>
-              <button
-                className={styles.navButton}
-                aria-label="Nächster Planet"
-                onClick={() => setClickedIndex(i => (
-                  i === hotspotsData.length - 1 ? null : i + 1
-                ))}
-              >
-                <Arrow width={13} />
-              </button>
-            </nav>
+            <PlanetNav index={clickedIndex} setIndex={setClickedIndex} className={styles.planetNavDesktop} />
           )}
         </div>
+
+        {hasPlanet && (
+          <PlanetNav index={clickedIndex} setIndex={setClickedIndex} className={styles.planetNavMobile} />
+        )}
 
         {/* ── Right: solar system ── */}
         <div className={`${styles.rightColumn} ${hasPlanet ? styles.rightColumnExpanded : ''}`}>

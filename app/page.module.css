@@ -1,0 +1,5 @@
+/* One white backdrop under all light sections, so no seam of the dark page
+   background can show between them */
+.light {
+  background: #ffffff;
+}

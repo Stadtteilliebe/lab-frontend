@@ -50,17 +50,18 @@
 .textCard {
   align-self: flex-start;
   width: fit-content;
-  /* Hard cap at the text's own max-width (420px) plus padding — fit-content
+  /* Hard cap at the text's max-width (460px) plus padding — fit-content
      alone doesn't reliably shrink to that with pre-line text in a flex item. */
-  max-width: min(480px, 100%);
-  border-radius: 12px;
+  max-width: min(520px, 100%);
+  border-radius: var(--radius-card);
   padding: 30px;
   background: rgba(0, 0, 0, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.textCard .stepTitle {
-  font-size: clamp(18px, 1.8vw + 4px, 28px);
+/* Card text runs all the way to the card's padding */
+.textCard .stepText {
+  max-width: 100%;
 }
 
 /* ── Title underline (see TitleUnderline in ScrollStory.jsx) ────────────── */
@@ -100,52 +101,81 @@
 }
 
 .stepTitle {
+  composes: h3 from '../typography.module.css';
   margin: 0 0 20px;
-  font-family: 'Averta', sans-serif;
-  font-size: clamp(22px, 2.8vw + 4px, 42px);
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
   color: rgba(255, 255, 255, 0.92);
   white-space: pre-line;
 }
 
 .stepText {
+  composes: text from '../typography.module.css';
   margin: 0;
-  font-family: 'Averta', sans-serif;
-  font-size: clamp(13px, 1.1vw + 7px, 15px);
-  font-weight: 400;
-  line-height: 1.8;
   color: #ffffff;
   white-space: pre-line;
   max-width: min(420px, 100%);
 }
 
-.stepHint {
-  margin: 24px 0 0;
-  font-family: 'Averta', sans-serif;
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.75);
+/* Used together with .stepText */
+.stepFit {
+  margin-top: 16px;
+}
+
+/* Custom: one step below the text style (18/30) on desktop — 18px reads
+   too large in the dark section. Below lg the text style (14/Auto) stays. */
+@media (min-width: 1024px) {
+  .stepText {
+    font-size: 16px;
+    line-height: 27px;
+  }
 }
 
 .firstPlanetBtn {
+  height: 42px;
   margin-top: 28px;
-  padding: 11px 22px;
+  padding: 0 22px;
   background: #ffffff;
   color: #0a0a0a;
   border: none;
   border-radius: 999px;
-  font-family: 'Averta', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
+  /* Button: no Figma text style — same as the buttons on stadtteilliebe.de */
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-text);
   cursor: pointer;
   transition: opacity 0.2s;
 }
 
 .firstPlanetBtn:hover {
   opacity: 0.75;
+}
+
+/* "Mehr zu …" in the planet card: black with a light outline, same size
+   and type as "Planeten ansehen" (the border is inside that size) */
+.moreButton {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 42px;
+  margin-top: 28px;
+  padding: 0 22px;
+  /* Same outline and hover as the round arrow buttons (.navButton) */
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  background: #000000;
+  color: #ffffff;
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.moreButton:hover {
+  border-color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* ── Scroll indicator (step 0 only) ─────────────────────────────────────── */
@@ -171,7 +201,14 @@
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.planetNavDesktop {
   margin-top: 32px;
+}
+
+.planetNavMobile {
+  display: none;
 }
 
 /* Same design as the ".indicator" arrow next to "Unsere Leistungen" in
@@ -197,10 +234,8 @@
 }
 
 .navCounter {
-  font-family: 'Averta', sans-serif;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.35);
-  letter-spacing: 0.06em;
+  composes: text from '../typography.module.css';
+  color: #ffffff;
 }
 
 /* ── Right column ────────────────────────────────────────────────────────── */
@@ -223,7 +258,14 @@
    the scroll-scrubbed steps and the sticky pin still work exactly the same,
    just split by height instead of by width. ─────────────────────────────── */
 @media (max-width: 768px) {
+  .storyWrapper {
+    background: #06060a;
+  }
+
+  /* svh: the visible height with the browser bars shown, so the planet
+     arrows at the bottom are never hidden behind them. */
   .stickySection {
+    height: 100svh;
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
   }
@@ -247,13 +289,7 @@
   }
 
   .stepTitle {
-    font-size: clamp(20px, 6.5vw, 28px);
     margin-bottom: 10px;
-  }
-
-  .stepText {
-    font-size: 13px;
-    line-height: 1.65;
   }
 
   /* Full width, so the planet nav below can center under it */
@@ -261,22 +297,56 @@
     width: 100%;
     max-width: 100%;
     padding: 20px;
-    border-radius: 10px;
   }
 
-  .textCard .stepTitle {
-    font-size: 19px;
-  }
-
+  .moreButton,
   .firstPlanetBtn {
+    height: 36px;
     margin-top: 16px;
-    padding: 9px 18px;
-    font-size: 13px;
+    padding: 0 18px;
+    font-size: 14px;
   }
 
-  .planetNav {
+  .planetNavDesktop {
+    display: none;
+  }
+
+  /* Pinned to the bottom of the screen, above the iPhone home indicator */
+  .planetNavMobile {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    z-index: 3;
+    display: flex;
     justify-content: center;
-    margin-top: 16px;
+    gap: 20px;
+  }
+
+  /* Bigger tap targets */
+  .planetNavMobile .navButton {
+    width: 44px;
+    height: 44px;
   }
 }
 
+
+/* Short phones (e.g. iPhone SE): a more compact card, so the service pills
+   around the planet keep enough room between card and arrows. */
+@media (max-width: 768px) and (max-height: 720px) {
+  .textCard {
+    padding: 16px 18px;
+  }
+
+  .textCard .stepTitle {
+    margin-bottom: 6px;
+  }
+
+  .stepFit {
+    margin-top: 10px;
+  }
+
+  .moreButton {
+    margin-top: 12px;
+  }
+}
