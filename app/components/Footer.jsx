@@ -63,7 +63,8 @@ export default function Footer() {
 
       <div className={styles.wordmarkWrap}>
         <p className={styles.wordmark}>
-          gemacht mit stadtteilliebe
+          {/* Mobile: two lines, so it can be set bigger */}
+          gemacht mit <span className={styles.wordmarkLine2}>stadtteilliebe</span>
           {/* Hand-written, drawn at its 8° slant, laid across the wordmark */}
           <img
             className={styles.greatStuff}

@@ -55,13 +55,14 @@ const TAN_HALF_FOV      = Math.tan((55 / 2) * Math.PI / 180);
 // the system sits below the text instead of behind it.
 const MOBILE_HALF_WIDTH  = 7.6;
 const MOBILE_VIEW_SHIFT  = 0.1;    // min. shift, fraction of canvas height (see updateViewShift)
-const MOBILE_NAV_SPACE   = 32;     // px kept free at the bottom (home indicator)
+const MOBILE_TOP_SPACE   = 64;     // px kept free at the top for the round close button
+const MOBILE_PLANET_AT   = 0.4;    // where a selected planet sits in the space above the card (0 top … 1 bottom)
 
 // Mobile: fits a selected planet's service pills into the free space around
 // it. Starts from the same scattered, tilted 3D anchors as desktop, seen
 // from the zoomed-in camera (offsets: px relative to the planet), stretches
-// that shape to the width and to the space between card and screen bottom
-// (top/bottom: px limits relative to the planet), then moves each pill to the
+// that shape to the width and to the space between close button and the
+// card sheet at the bottom (top/bottom: px limits relative to the planet), then moves each pill to the
 // nearest spot where it overlaps neither another pill nor the planet.
 // Returns the stretch factors plus a per-pill correction, so the render loop can keep projecting the anchors
 // every frame — the pills swing in with the camera like on desktop and
@@ -109,8 +110,9 @@ const layoutMobilePills = (els, offsets, containerWidth, top, bottom) => {
   };
 };
 
-// topInsetRef (mobile): element covering the top of the canvas (text/card) —
-// a selected planet and its pills are centered in the space below it.
+// topInsetRef (mobile): the text column — step text at the top (the overview
+// sits below it), or with a planet open the card sheet at the bottom (the
+// planet and its pills are centered in the space above it).
 export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPlanet, onPlanetClick, topInsetRef }) {
   const containerRef      = useRef(null);
   const canvasRef         = useRef(null);
@@ -470,9 +472,9 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       animateCam(camera.position.clone(), controls.target.clone(), newCamPos, newTarget, 900, undefined, toLens, focus);
     };
 
-    // Mobile: middle of the free space between the text card and the screen
-    // bottom (read at call time — the card has just re-rendered for the
-    // newly selected planet).
+    // Mobile: height of the text column — the step text at the top in the
+    // overview, the card sheet at the bottom with a planet open (read at call
+    // time — the card has just re-rendered for the newly selected planet).
     const topInset      = () => topInsetRef?.current?.offsetHeight ?? 0;
 
     // Mobile overview: shifts the image down (px) so the system sits in the
@@ -486,9 +488,17 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       const ch = container.clientHeight;
       viewShiftTarget = Math.max(ch * MOBILE_VIEW_SHIFT, topInset() / 2);
     };
-    const planetScreenY = () => {
-      const inset = topInset();
-      return inset + (container.clientHeight - inset - MOBILE_NAV_SPACE) / 2;
+    // Mobile, planet open: topInsetRef is the card sheet along the bottom —
+    // the planet sits in the space above it, a bit above the middle so its
+    // pills keep clear of the card
+    const planetScreenY = () => (
+      MOBILE_TOP_SPACE + (container.clientHeight - sheetSpace() - MOBILE_TOP_SPACE) * MOBILE_PLANET_AT
+    );
+    // Room the sheet takes at the bottom: its height plus its offset from
+    // the screen edge (10px + home indicator)
+    const sheetSpace = () => {
+      const el = topInsetRef?.current;
+      return el ? container.getBoundingClientRect().bottom - el.getBoundingClientRect().top : 0;
     };
 
     // Desktop, back from a planet: that planet (it's on screen, unlike the
@@ -502,6 +512,15 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       }
       focusedPlanetPos = null;
       animateCam(camera.position.clone(), controls.target.clone(), defaultCamPos.clone(), defaultTarget.clone(), 900, undefined, toLens, focus);
+    };
+
+    // Mobile, planet open: the screen or the card changed size (browser
+    // bars, a longer text) — frame the planet above the card again
+    const reframeMobile = () => {
+      const index = selectedPlanetRef.current;
+      if (!mq.matches || index === null) return;
+      mobilePillLayout = null;
+      moveTo(hotspotMeshes[index].position.clone());
     };
 
     // ── Scene step transitions ────────────────────────────────────────────────
@@ -710,7 +729,7 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
           endCam.updateMatrixWorld();
           const planetY = planetScreenY();
           mobilePillLayout = layoutMobilePills(
-            els, offsetsFrom(endCam), cW, topInset() + 8 - planetY, cH - MOBILE_NAV_SPACE - planetY,
+            els, offsetsFrom(endCam), cW, MOBILE_TOP_SPACE - planetY, cH - sheetSpace() - 8 - planetY,
           );
         }
         const ndc = planetPos.clone().project(camera);
@@ -749,10 +768,15 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       camera.updateProjectionMatrix();
       renderer.setSize(width, height, false);
       fitView();
+      reframeMobile();
     });
     resizeObserver.observe(container);
-    // Step text / card height changes → re-center the mobile overview
-    const insetObserver = new ResizeObserver(updateViewShift);
+    // Step text / card height changes → re-center the mobile overview, or
+    // re-frame the open planet above the card
+    const insetObserver = new ResizeObserver(() => {
+      updateViewShift();
+      reframeMobile();
+    });
     if (topInsetRef?.current) insetObserver.observe(topInsetRef.current);
     mq.addEventListener('change', fitView);
     fitView();

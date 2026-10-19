@@ -106,4 +106,31 @@
   .label {
     margin-bottom: 10px;
   }
+
+  /* Bigger drawing, centered — cut off on both sides instead of shrinking
+     to a thin strip */
+  .divider {
+    overflow: hidden;
+  }
+
+  .dividerImage {
+    width: 190%;
+    margin-left: -45%;
+  }
+
+  /* Two lines: "stadtteilliebe" (5.78em) is the longer one */
+  .wordmark {
+    font-size: calc(100cqw / 5.85);
+  }
+
+  .wordmarkLine2 {
+    display: block;
+  }
+
+  /* Same spot on "stadtteilliebe" as on desktop, one line further down
+     (8.85em − 5.94em for "gemacht mit ") */
+  .greatStuff {
+    left: 2.91em;
+    top: 1.56em;
+  }
 }

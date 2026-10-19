@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Der Kern unserer Leistungen | Stadtteilliebe',
+  title: 'Unsere Leistungen',
   description: 'Strategie, Branding, UX/UI-Design und Webentwicklung aus einem Team. Wie die Leistungen zusammenhängen und wie du deinen Einstieg findest.',
 };
 

@@ -130,7 +130,9 @@ function PlanetNav({ index, setIndex }) {
 const CLOSE_VIEW_SPACE = 60;
 
 // "✕ Ansicht schließen" at the top left of the screen, back to the overview.
-// Fixed to the screen, so it stays put while the page scrolls on.
+// Fixed to the screen, so it stays put while the page scrolls on. Mobile:
+// just the ✕ in a round button, top right (the label stays for screen
+// readers).
 // The ✕ is the hand-drawn stadtteilliebe cross (viewBox cropped to the
 // drawing, like Arrow), drawn at the same scale as the 18px arrows (0.75)
 // so the strokes match.
@@ -141,7 +143,7 @@ function CloseView({ onClick, hidden }) {
         <path d="M15.5169 18.927C19.6127 22.5309 23.4945 26.3657 27.1572 30.4369C28.5294 31.9622 30.7417 29.6796 29.3695 28.1596C25.7015 24.0938 21.8249 20.259 17.7292 16.6497C16.2057 15.307 13.983 17.5735 15.5169 18.927Z" />
         <path d="M27.3708 14.5762C23.5621 18.9589 19.748 23.3415 15.9393 27.7296C14.5984 29.271 16.8054 31.559 18.1515 30.0068C21.9603 25.6242 25.7743 21.2415 29.5831 16.8535C30.924 15.312 28.717 13.024 27.3708 14.5762Z" />
       </svg>
-      Ansicht schließen
+      <span className={styles.closeLabel}>Ansicht schließen</span>
     </button>
   );
 }
@@ -278,13 +280,19 @@ export default function ScrollStory() {
       <div className={styles.stickySection}>
 
         {/* ── Left: text panel ── */}
-        <div ref={leftColumnRef} className={`${styles.leftColumn} ${hasPlanet || settling ? styles.leftColumnClear : ''}`}>
+        <div
+          ref={leftColumnRef}
+          className={`${styles.leftColumn} ${hasPlanet || settling ? styles.leftColumnClear : ''} ${hasPlanet ? styles.leftColumnSheet : ''}`}
+        >
           {hasPlanet && <CloseView onClick={() => setClickedIndex(null)} hidden={!storyAtTop} />}
           {hasPlanet ? (
             <div key={clickedIndex} className={`${styles.textContent} ${styles.textCard}`}>
-              <ServiceIcon name={planet.title} className={styles.cardIcon} />
-              {/* Planet teasers sit one level below the step headings */}
-              <StepTitle as="h3" title={planet.heading} />
+              {/* Mobile: symbol and title side by side */}
+              <div className={styles.cardHead}>
+                <ServiceIcon name={planet.title} className={styles.cardIcon} />
+                {/* Planet teasers sit one level below the step headings */}
+                <StepTitle as="h3" title={planet.heading} />
+              </div>
               <p className={styles.stepText}>{planet.text}</p>
               <p className={`${styles.stepText} ${styles.stepFit}`}>Sinnvoll, wenn: {planet.fit}</p>
               <div className={styles.cardFooter}>
