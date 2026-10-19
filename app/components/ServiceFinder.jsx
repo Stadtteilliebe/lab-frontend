@@ -1,71 +1,52 @@
-import { Fragment } from 'react';
+import Arrow from './Arrow';
 import { hotspotsData } from './services';
 import styles from './ServiceFinder.module.css';
 
-// "Welche Leistung passt zu dir?" — Notion „Leistungsübersicht – Inhalte &
-// Positionierung“, Content-Entwurf v1. A real <table>, so the situations →
-// service mapping stays readable for search engines and AI answers.
-// Numbers in `services` point into hotspotsData (0 Strategy … 3 Engineering).
+// "Welche Leistung passt zu dir?" — typical starting situations, each with
+// the service to begin with. `service` points into hotspotsData
+// (0 Strategy … 3 Engineering); the card links to its subpage (no link yet,
+// see hotspotsData).
 const SITUATIONS = [
-  { situation: 'Du gründest oder bringst ein neues Produkt raus.', services: [0, 1] },
-  { situation: 'Deine Marke passt, deine Website nicht mehr.', services: [2] },
-  { situation: 'Du erkennst dich in deinem Auftritt nicht mehr wieder.', services: [0, 1] },
-  { situation: 'Dein digitales Produkt soll besser werden.', services: [2] },
-  { situation: 'Das Design steht, es fehlt die Umsetzung.', services: [3] },
+  { situation: 'Du gründest oder bringst ein neues Produkt raus.', service: 0 },
+  { situation: 'Du kennst deine Zielgruppe, erkennst dich aber in deinem Auftritt nicht mehr wieder.', service: 1 },
+  { situation: 'Dein digitales Produkt soll besser werden.', service: 2 },
+  { situation: 'Das Design steht, es fehlt die Umsetzung.', service: 3 },
+  { situation: 'Deine Marke passt, deine Website nicht mehr.', service: 2 },
+  { situation: 'Im Team will jede:r etwas anderes.', service: 0 },
 ];
 
 export default function ServiceFinder() {
   return (
     <section className={styles.section}>
-      <div className={styles.head}>
-        <h2 className={styles.title}>Welche Leistung passt zu dir?</h2>
-        <p className={styles.intro}>
-          Jedes Projekt startet woanders. Hier siehst du, womit unsere Kund*innen typischerweise anfangen.
-        </p>
-      </div>
+      <h2 className={styles.title}>Welche Leistung passt zu dir?</h2>
 
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th className={styles.colHead} scope="col">Deine Ausgangslage</th>
-            <th className={styles.colHead} scope="col">Dein Einstieg</th>
-          </tr>
-        </thead>
-        <tbody>
-          {SITUATIONS.map(row => (
-            <tr key={row.situation}>
-              <td className={styles.situation}>{row.situation}</td>
-              <td className={styles.start}>
-                {/* Quicklinks to the service subpages (no link yet, see hotspotsData) */}
-                {row.services.map((s, i) => (
-                  <Fragment key={s}>
-                    {i > 0 && <span className={styles.or}> oder </span>}
-                    <a className={styles.quicklink} href={hotspotsData[s].href ?? undefined}>
-                      {hotspotsData[s].title}
-                    </a>
-                  </Fragment>
-                ))}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <ul className={styles.grid}>
+        {SITUATIONS.map(({ situation, service }) => (
+          <li key={situation}>
+            <a className={styles.card} href={hotspotsData[service].href ?? undefined}>
+              <span className={styles.tag} style={{ background: hotspotsData[service].color }}>
+                {hotspotsData[service].title}
+              </span>
+              <p className={styles.situation}>{situation}</p>
+              <Arrow className={styles.arrow} width={18} />
+            </a>
+          </li>
+        ))}
+      </ul>
 
+      {/* Speech bubble: the tail is drawn by .answer::after */}
       <div className={styles.answer}>
         <h3 className={styles.question}>Erst die Marke oder gleich die Website?</h3>
-        <div className={styles.answerText}>
-          <p>
-            Meistens zuerst die Marke. Positionierung, Logo, Farben und Botschaften sind das Fundament,
-            auf dem deine Website aufbaut. Wer andersherum startet, muss die Website später oft
-            nachbessern und das kostet Zeit und Geld. Steht deine Marke schon und passt noch zu dir,
-            startest du direkt mit der Website. Drängt der Launch, arbeiten wir parallel: Während das
-            Corporate Design entsteht, planen wir schon Struktur und Inhalte der Website.
-          </p>
-          <p>
-            Du bist unsicher? <a href="https://stadtteilliebe.de/kontakt">Frag uns</a>, wir sagen dir,
-            womit du anfangen könntest.
-          </p>
-        </div>
+        <p className={styles.answerText}>
+          Meistens zuerst die Marke. Positionierung, Logo, Farben und Botschaften sind das Fundament,
+          auf dem deine Website aufbaut. Wer andersherum startet, muss die Website später oft
+          nachbessern und das kostet Zeit und Geld. Steht deine Marke schon und passt noch zu dir,
+          startest du direkt mit der Website. Drängt der Launch, arbeiten wir parallel: Während das
+          Corporate Design entsteht, planen wir schon Struktur und Inhalte der Website.
+          <br />
+          Du bist unsicher? <a href="https://stadtteilliebe.de/kontakt">Frag uns</a>, wir sagen dir,
+          womit du anfangen könntest.
+        </p>
       </div>
     </section>
   );
