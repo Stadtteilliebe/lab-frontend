@@ -294,7 +294,7 @@ export default function ScrollStory() {
                 <StepTitle as="h3" title={planet.heading} />
               </div>
               <p className={styles.stepText}>{planet.text}</p>
-              <p className={`${styles.stepText} ${styles.stepFit}`}>Sinnvoll, wenn: {planet.fit}</p>
+              <p className={`${styles.stepText} ${styles.stepFit}`}>Sinnvoll, wenn: {planet.fit}.</p>
               <div className={styles.cardFooter}>
                 <a className={styles.moreButton} href={planet.href ?? undefined}>
                   Mehr zu {planet.title}

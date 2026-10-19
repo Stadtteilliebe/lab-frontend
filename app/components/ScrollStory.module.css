@@ -375,8 +375,12 @@
     overflow: visible;
   }
 
+  /* Outline like the orbit rings (white at 55%). 0.67px: on 3× phones a
+     0.5px border collapses to one device pixel, thinner than the rings,
+     which the canvas draws at 2× and the screen scales up to 1.5 px. */
   .leftColumnSheet .textCard {
     padding: 22px;
+    border: 0.67px solid rgba(255, 255, 255, 0.55);
   }
 
   .cardHead {
