@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Arrow from './Arrow';
+import ServiceIcon from './ServiceIcon';
 import { hotspotsData } from './services';
 import styles from './HeroStage.module.css';
 
@@ -10,16 +11,15 @@ function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 // Share of the stage's scroll range before the white panel starts to grow.
 const NAV_LEAD = 0.06;
 
-// "direkt zu" jump points — each leads to the service's subpage (see href
+// Jump points — each leads to the service's subpage (see href
 // in hotspotsData; no link yet until the subpages exist).
 function JumpList({ className = '' }) {
   return (
     <div className={`${styles.jump} ${className}`}>
-      <p className={styles.jumpLabel}>Direkt zu</p>
       <div className={styles.jumpList}>
         {hotspotsData.map(h => (
           <a key={h.title} className={styles.jumpItem} href={h.href ?? undefined}>
-            <span className={styles.jumpDot} />
+            <ServiceIcon name={h.title} className={styles.jumpIcon} />
             <span className={styles.jumpTitle}>{h.title}</span>
             <Arrow className={styles.jumpArrow} width={18} />
           </a>
@@ -108,7 +108,7 @@ export default function HeroStage() {
               onClick={() => document.getElementById('leistungen')?.scrollIntoView({ behavior: 'smooth' })}
               aria-label="Zu unseren Leistungen"
             >
-              <Arrow direction="down" width={13} />
+              <Arrow direction="down" width={18} />
             </button>
           </div>
 

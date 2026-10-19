@@ -1,5 +1,4 @@
 import './globals.css';
-import Nav from './components/Nav';
 
 export const metadata = {
   title: 'Der Kern unserer Leistungen | Stadtteilliebe',
@@ -11,7 +10,6 @@ export default function RootLayout({ children }) {
     <html lang="de">
       <body>
         <script dangerouslySetInnerHTML={{ __html: 'history.scrollRestoration="manual";window.scrollTo(0,0);' }} />
-        <Nav />
         {children}
       </body>
     </html>

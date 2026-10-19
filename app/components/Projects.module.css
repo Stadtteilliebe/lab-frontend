@@ -4,7 +4,7 @@
   gap: clamp(28px, 3vw, 40px);
   padding: 0 clamp(20px, 5.5vw, 80px) clamp(64px, 9vw, 128px);
   background: #ffffff;
-  color: #0a0a0a;
+  color: #121212;
 }
 
 .title {
@@ -48,6 +48,33 @@
   padding: 24px;
 }
 
+/* Service pills in the service colours. Custom: same size as the planet
+   pills (LabScene .subLabel) — Averta regular 14/Auto, 5px 15px padding —
+   with a thin dark outline (inset, so the height stays 27px). Room for
+   two rows, so client and title line up across the cards. */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
+  min-height: 62px;
+  margin: 0 0 32px;
+  padding: 0;
+  list-style: none;
+}
+
+.tag {
+  padding: 5px 15px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px #121212;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: normal;
+  color: #121212;
+  white-space: nowrap;
+}
+
 /* Custom: client name smaller than the text style (as in the design) */
 .client {
   composes: text from '../typography.module.css';
@@ -81,5 +108,10 @@
   .body {
     min-height: 0;
     padding: 20px;
+  }
+
+  .tags {
+    min-height: 0;
+    margin-bottom: 24px;
   }
 }

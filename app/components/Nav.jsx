@@ -5,12 +5,15 @@ import styles from './Nav.module.css';
 
 const LINKS = [
   { label: 'Projekte', href: 'https://stadtteilliebe.de/projekte' },
-  { label: 'Leistungen', href: '#leistungen' },
+  // To the top of the page — the stage introduces the services
+  { label: 'Leistungen', href: '#top' },
   { label: 'Merch', href: 'https://stadtteilliebe.de/merch' },
 ];
 const CONTACT = { label: 'Kontakt', href: 'https://stadtteilliebe.de/kontakt' };
 
-export default function Nav() {
+// variant "service": service subpages — brand over the black half, links
+// over the coloured half, lilac contact button.
+export default function Nav({ variant }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -27,12 +30,19 @@ export default function Nav() {
     setMenuOpen(false);
     if (href.startsWith('#')) {
       e.preventDefault();
-      document.getElementById(href.slice(1))?.scrollIntoView({ behavior: 'smooth' });
+      if (href === '#top') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      const target = document.getElementById(href.slice(1));
+      // Not on this page (subpage) — go to the overview instead
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+      else window.location.href = '/';
     }
   };
 
   return (
-    <header className={styles.header}>
+    <header className={`${styles.header} ${variant === 'service' ? styles.service : ''} ${menuOpen ? styles.menuOpen : ''}`}>
       <div className={`${styles.bar} ${scrolled && !menuOpen ? styles.barHidden : ''}`}>
         <a href="https://stadtteilliebe.de" className={styles.brand} aria-label="Zur Startseite">
           stadtteilliebe

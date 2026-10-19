@@ -5,7 +5,7 @@
   gap: 20px;
   padding: clamp(48px, 6vw, 96px) clamp(20px, 5.5vw, 80px) clamp(64px, 9vw, 128px);
   background: #ffffff;
-  color: #0a0a0a;
+  color: #121212;
   text-align: center;
 }
 
@@ -55,20 +55,12 @@
 }
 
 .secondary {
-  border: 1.5px solid #0a0a0a;
-  color: #0a0a0a;
+  border: 1.5px solid #121212;
+  color: #121212;
 }
 
 .secondary:hover {
   background: rgba(0, 0, 0, 0.05);
-}
-
-/* Sticker band: tiles horizontally, centered on the white → footer edge */
-.divider {
-  height: clamp(72px, 7.2vw, 140px);
-  background:
-    url('/images/divider.webp') center / auto 100% repeat-x,
-    linear-gradient(to bottom, #ffffff 50%, #06060a 50%);
 }
 
 @media (max-width: 768px) {

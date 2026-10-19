@@ -4,7 +4,7 @@
   gap: clamp(28px, 3vw, 40px);
   padding: clamp(64px, 9vw, 128px) clamp(20px, 5.5vw, 80px);
   background: #ffffff;
-  color: #0a0a0a;
+  color: #121212;
 }
 
 /* ── Heading + intro ────────────────────────────────────────────────────── */
@@ -42,7 +42,7 @@
   composes: caps from '../typography.module.css';
   padding: 0 0 14px;
   font-weight: 400;
-  color: #0a0a0a;
+  color: #121212;
 }
 
 .colHead:first-child,
@@ -54,19 +54,19 @@
 .table td {
   padding-top: 22px;
   padding-bottom: 22px;
-  border-top: 1px solid #0a0a0a;
+  border-top: 1px solid #121212;
   vertical-align: middle;
 }
 
 .table tbody tr:last-child td {
-  border-bottom: 1px solid #0a0a0a;
+  border-bottom: 1px solid #121212;
 }
 
 /* Quicklinks: underlined service names, side by side */
 .quicklink {
   composes: text from '../typography.module.css';
   font-weight: 600;
-  color: #0a0a0a;
+  color: #121212;
   text-decoration: underline;
   text-decoration-thickness: 1.5px;
   text-underline-offset: 5px;
@@ -124,11 +124,11 @@
 
   .table tr {
     padding: 16px 0;
-    border-top: 1px solid #0a0a0a;
+    border-top: 1px solid #121212;
   }
 
   .table tbody tr:last-child {
-    border-bottom: 1px solid #0a0a0a;
+    border-bottom: 1px solid #121212;
   }
 
   .table td,

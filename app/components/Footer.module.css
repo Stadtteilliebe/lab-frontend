@@ -1,36 +1,58 @@
 .footer {
   display: flex;
   flex-direction: column;
-  gap: clamp(48px, 5vw, 72px);
-  padding: 90px 0 96px;
-  background: #06060a;
+  padding-bottom: clamp(40px, 6.5vw, 94px);
+  background: #121212;
   color: #ffffff;
   font-family: var(--font-family);
 }
 
 .columns,
-.bottom {
+.wordmarkWrap,
+.copyright {
   padding: 0 clamp(20px, 5.5vw, 80px);
 }
 
-/* ── Links / Connect / Contact ──────────────────────────────────────────── */
-/* Spread over the full width: first column at the left edge, last at the
-   right edge, the middle one with equal gaps to both. */
+/* ── Sticker divider ────────────────────────────────────────────────────── */
+/* The drawing (1440 × 146) scaled to the full width at its own aspect
+   ratio, flush with both edges. Behind it the page turns from the white
+   above to the footer's dark where the stickers' lower edge sits in the
+   design (58% down). */
+.divider {
+  background: linear-gradient(to bottom, #ffffff 58%, #121212 58%);
+}
+
+.dividerImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ── Contact / Links / Connect / Legal ──────────────────────────────────── */
 .columns {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px;
+  margin-top: clamp(32px, 3.4vw, 48px);
 }
 
 .column {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 4px;
 }
 
+.label {
+  composes: caps from '../typography.module.css';
+  margin: 0 0 18px;
+  color: #ffffff;
+}
+
+/* Custom: semibold (as in the design) */
 .link {
   composes: text from '../typography.module.css';
+  font-weight: 600;
   color: #ffffff;
   text-decoration: none;
 }
@@ -40,85 +62,48 @@
   text-underline-offset: 4px;
 }
 
-/* ── Marquee — same mechanics as on stadtteilliebe.de/projekte ──────────── */
-.marquee {
-  overflow: hidden;
-  white-space: nowrap;
-  padding: 8px 0;
+/* ── "gemacht mit stadtteilliebe" ───────────────────────────────────────── */
+/* Query container, so the wordmark can size itself to exactly the content
+   width (cqw) */
+.wordmarkWrap {
+  container-type: inline-size;
+  margin-top: clamp(48px, 5.2vw, 75px);
 }
 
-.marqueeTrack {
-  display: inline-block;
-  animation: marquee 80s linear infinite;
-}
-
-/* Display size: no Figma text style */
-.marqueeItem {
-  display: inline-block;
-  padding-right: 0.6em;
-  font-size: clamp(56px, 7.8vw, 170px);
+/* Display size: no Figma text style. 100cqw / 11.85 fills the width — the
+   line is 11.73em long in Averta semibold at this tracking. */
+.wordmark {
+  position: relative;
+  margin: 0;
+  font-size: calc(100cqw / 11.85);
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.025em;
-  color: #9f9f9f;
+  white-space: nowrap;
+  color: #3c3c3c;
 }
 
-@keyframes marquee {
-  0%   { transform: translate(0); }
-  100% { transform: translate(-50%); }
+/* Over the end of the wordmark, in em so it scales with it */
+.greatStuff {
+  position: absolute;
+  left: 8.85em;
+  top: 0.56em;
+  width: 2.05em;
+  height: auto;
 }
 
-.tagline {
-  composes: h4 from '../typography.module.css';
-  text-align: center;
-}
-
-/* ── Bottom row ─────────────────────────────────────────────────────────── */
-.bottom {
+.copyright {
   composes: text from '../typography.module.css';
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-}
-
-.legal {
-  display: flex;
-  gap: 36px;
-}
-
-.legal a {
-  color: #ffffff;
-  text-decoration: none;
-}
-
-.legal a:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  margin: clamp(48px, 6vw, 86px) 0 0;
 }
 
 @media (max-width: 768px) {
-  .footer {
-    gap: 40px;
-    padding: 56px 0 40px;
-  }
-
-  /* Compact: Links | Connect side by side, contact underneath on its own
-     row (the e-mail address is too long to share a row). */
   .columns {
-    display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 28px 20px;
+    gap: 36px 20px;
   }
 
-  .columns > :last-child {
-    grid-column: 1 / -1;
-  }
-
-  .marqueeItem {
-    font-size: 44px;
-  }
-
-  .legal {
-    gap: 20px;
+  .label {
+    margin-bottom: 10px;
   }
 }

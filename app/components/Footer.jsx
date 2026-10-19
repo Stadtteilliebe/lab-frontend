@@ -1,63 +1,79 @@
 import styles from './Footer.module.css';
 
-const LINKS = [
-  { label: 'Home', href: 'https://stadtteilliebe.de' },
-  { label: 'Projekte', href: 'https://stadtteilliebe.de/projekte' },
-  { label: 'Leistungen', href: '#leistungen' },
-  { label: 'Merch', href: 'https://stadtteilliebe.de/merch' },
+const COLUMNS = [
+  {
+    label: 'Contact',
+    links: [{ label: 'hallo@stadtteilliebe.de', href: 'mailto:hallo@stadtteilliebe.de' }],
+  },
+  {
+    label: 'Links',
+    links: [
+      { label: 'Home', href: 'https://stadtteilliebe.de' },
+      // To the top of the page — the stage introduces the services
+      { label: 'Leistungen', href: '#top' },
+      { label: 'Projekte', href: 'https://stadtteilliebe.de/projekte' },
+      { label: 'Merch', href: 'https://stadtteilliebe.de/merch' },
+    ],
+  },
+  {
+    label: 'Connect',
+    external: true,
+    links: [
+      { label: 'Instagram', href: 'https://www.instagram.com/stadtteilliebe/' },
+      { label: 'LinkedIn', href: 'https://www.linkedin.com/company/stadtteilliebe/posts/' },
+      { label: 'Tiktok', href: 'https://www.tiktok.com/@stadtteilliebe' },
+    ],
+  },
+  {
+    label: 'Legal',
+    links: [
+      { label: 'Impressum', href: 'https://stadtteilliebe.de/impressum' },
+      // TODO: stadtteilliebe.de/datenschutz doesn't exist yet
+      { label: 'Datenschutz', href: '#' },
+    ],
+  },
 ];
-
-const CONNECT = [
-  { label: 'Instagram', href: 'https://www.instagram.com/stadtteilliebe/' },
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/stadtteilliebe/posts/' },
-  { label: 'Tiktok', href: 'https://www.tiktok.com/@stadtteilliebe' },
-];
-
-// Two identical halves: the marquee animation shifts the track by -50%,
-// so the second half lands exactly where the first started and it loops
-// seamlessly (same component as the marquee on stadtteilliebe.de/projekte).
-const MARQUEE_REPEAT = 12;
 
 export default function Footer() {
   return (
     <footer className={styles.footer}>
+      {/* Sticker band across the white → dark edge: one drawing, scaled to
+          the full width — never tiled or stretched */}
+      <div className={styles.divider} aria-hidden="true">
+        <img className={styles.dividerImage} src="/images/footer-divider.svg" alt="" />
+      </div>
+
       <div className={styles.columns}>
-        <div className={styles.column}>
-          {LINKS.map(link => (
-            <a key={link.label} href={link.href} className={styles.link}>{link.label}</a>
-          ))}
-        </div>
-
-        <div className={styles.column}>
-          {CONNECT.map(link => (
-            <a key={link.label} href={link.href} className={styles.link} target="_blank" rel="noopener noreferrer">{link.label}</a>
-          ))}
-        </div>
-
-        <div className={styles.column}>
-          <a href="https://stadtteilliebe.de/kontakt" className={styles.link}>Kontakt</a>
-          <a href="mailto:hallo@stadtteilliebe.de" className={styles.link}>hallo@stadtteilliebe.de</a>
-        </div>
+        {COLUMNS.map(column => (
+          <div key={column.label} className={styles.column}>
+            <p className={styles.label}>{column.label}</p>
+            {column.links.map(link => (
+              <a
+                key={link.label}
+                href={link.href}
+                className={styles.link}
+                {...(column.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+        ))}
       </div>
 
-      <div className={styles.marquee} aria-hidden="true">
-        <span className={styles.marqueeTrack}>
-          {Array.from({ length: MARQUEE_REPEAT }, (_, i) => (
-            <span key={i} className={styles.marqueeItem}>stadtteilliebe</span>
-          ))}
-        </span>
+      <div className={styles.wordmarkWrap}>
+        <p className={styles.wordmark}>
+          gemacht mit stadtteilliebe
+          {/* Hand-written, drawn at its 8° slant, laid across the wordmark */}
+          <img
+            className={styles.greatStuff}
+            src="/images/great-stuff.svg"
+            alt="doing great stuff since 2018"
+          />
+        </p>
       </div>
 
-      <p className={styles.tagline}>doing great stuff<br />since 2018</p>
-
-      <div className={styles.bottom}>
-        <span>stadtteilliebe</span>
-        <div className={styles.legal}>
-          <a href="https://stadtteilliebe.de/impressum">Impressum</a>
-          {/* TODO: stadtteilliebe.de/datenschutz doesn't exist yet */}
-          <a href="#">Datenschutz</a>
-        </div>
-      </div>
+      <p className={styles.copyright}>© {new Date().getFullYear()}</p>
     </footer>
   );
 }

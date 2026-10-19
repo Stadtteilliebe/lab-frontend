@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { hotspotsData as serviceTeasers } from './services';
 import styles from './LabScene.module.css';
 
 const hotspotsData = [
@@ -41,6 +42,11 @@ const orbitsConfig = [
 const PILL_NUDGE_Y = {};
 
 const BASE_CAM_DISTANCE = 20;
+
+// Desktop: the canvas spans the whole width (under the text column, so it
+// never resizes when a planet opens); the overview is shifted to the middle
+// of the right column (ScrollStory's 55/45 grid) — as a fraction of the width.
+const DESKTOP_SYSTEM_X = 0.775;
 const TAN_HALF_FOV      = Math.tan((55 / 2) * Math.PI / 180);
 
 // Mobile: the canvas fills the whole (portrait) sticky section, so the camera
@@ -49,13 +55,13 @@ const TAN_HALF_FOV      = Math.tan((55 / 2) * Math.PI / 180);
 // the system sits below the text instead of behind it.
 const MOBILE_HALF_WIDTH  = 7.6;
 const MOBILE_VIEW_SHIFT  = 0.1;    // min. shift, fraction of canvas height (see updateViewShift)
-const MOBILE_NAV_SPACE   = 92;     // px kept free at the bottom for the planet arrows
+const MOBILE_NAV_SPACE   = 32;     // px kept free at the bottom (home indicator)
 
 // Mobile: fits a selected planet's service pills into the free space around
 // it. Starts from the same scattered, tilted 3D anchors as desktop, seen
 // from the zoomed-in camera (offsets: px relative to the planet), stretches
-// that shape to the width and to the space between card and arrows (top/
-// bottom: px limits relative to the planet), then moves each pill to the
+// that shape to the width and to the space between card and screen bottom
+// (top/bottom: px limits relative to the planet), then moves each pill to the
 // nearest spot where it overlaps neither another pill nor the planet.
 // Returns the stretch factors plus a per-pill correction, so the render loop can keep projecting the anchors
 // every frame — the pills swing in with the camera like on desktop and
@@ -128,7 +134,7 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
     const h = container.clientHeight || window.innerHeight;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x06060a);
+    scene.background = new THREE.Color(0x121212);
 
     const camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 1000);
     camera.position.set(0, 2, BASE_CAM_DISTANCE);
@@ -149,17 +155,22 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping   = true;
     controls.dampingFactor   = 0.04;
-    controls.enableZoom      = false;   // enabled only in step 2
+    controls.enableZoom      = false;   // never — the wheel scrolls the page
     controls.enableRotate    = false;   // enabled only in step 2
     controls.enablePan       = false;
     controls.autoRotate      = true;
     controls.autoRotateSpeed = 1.8;
-    controls.minDistance     = 4;
     controls.maxDistance     = 32;
     controls.mouseButtons    = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.DOLLY };
     controls.update();
 
-    renderer.domElement.addEventListener('pointerdown', () => { if (currentStep >= 2) controls.autoRotate = false; });
+    // Where the pointer went down — a drag (rotating the system) ends in a
+    // click too, which must not count as one (see handleClick)
+    let pointerDownAt = null;
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      pointerDownAt = { x: e.clientX, y: e.clientY };
+      if (currentStep >= 2) controls.autoRotate = false;
+    });
     let mobilePillLayout = null;
     let pillCamPose = null;   // mobile: where moveTo's zoom ends (see layoutMobilePills)
 
@@ -203,7 +214,8 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       ringMeshes.push(ring);
 
       const planetGeo = new THREE.SphereGeometry(0.15, 32, 32);
-      const planetMat = new THREE.MeshBasicMaterial({ color: 0xBAA2F9, transparent: true, depthWrite: true, opacity: 0 });
+      // toneMapped: false — ACES would wash the pastel service colours out to white
+      const planetMat = new THREE.MeshBasicMaterial({ color: serviceTeasers[i].color, toneMapped: false, transparent: true, depthWrite: true, opacity: 0 });
       const planet = new THREE.Mesh(planetGeo, planetMat);
       planet.renderOrder = 1;
       planet.userData = { title: hotspotsData[i].title, text: hotspotsData[i].text };
@@ -276,17 +288,20 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       });
     };
 
+    // Returns a function that stops the fade where it is.
     const fadeMat = (mat, from, to, duration, onDone) => {
       const start = performance.now();
+      let raf = 0;
       mat.opacity = from;
       const tick = () => {
         const t = Math.min((performance.now() - start) / duration, 1);
         const e = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
         mat.opacity = from + (to - from) * e;
-        if (t < 1) requestAnimationFrame(tick);
+        if (t < 1) raf = requestAnimationFrame(tick);
         else if (onDone) onDone();
       };
       tick();
+      return () => cancelAnimationFrame(raf);
     };
 
     const defaultCamPos = new THREE.Vector3(0, 2, BASE_CAM_DISTANCE);
@@ -297,14 +312,13 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
     // backs off to fit the width, shifts the image down, and leaves touch
     // gestures to the page (OrbitControls sets touch-action: none, which
     // otherwise blocks scrolling over the whole canvas).
-    // Rotate/zoom only from step 2 on, so scrolling through the first two
-    // steps can never grab the scene. Zoom only with a planet open (the
-    // wheel would fight page scroll). Mobile can't be dragged or pinched at
-    // all — taps still open planets, swipes only scroll the page.
+    // Rotate only from step 2 on, so scrolling through the first two steps
+    // can never grab the scene. No zoom at all (the wheel scrolls the page).
+    // Mobile can't be dragged at all — taps still open planets, swipes only
+    // scroll the page.
     const applyInteraction = () => {
       const interactive = currentStep >= 2 && !mq.matches;
       controls.enableRotate = interactive;
-      controls.enableZoom   = interactive && selectedPlanetRef.current !== null;
     };
 
     const fitView = () => {
@@ -316,11 +330,9 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
         : BASE_CAM_DISTANCE;
       defaultCamPos.set(0, 2, BASE_CAM_DISTANCE).multiplyScalar(dist / BASE_CAM_DISTANCE);
       controls.maxDistance = Math.max(32, dist * 1.2);
-      if (mobile) {
-        updateViewShift();
-        viewShift = viewShiftTarget;
-        camera.setViewOffset(cw, ch, 0, -viewShift, cw, ch);
-      } else camera.clearViewOffset();
+      updateViewShift();
+      if (selectedPlanetRef.current === null) Object.assign(lens, overviewLens());
+      applyLens();
       renderer.domElement.style.touchAction = mobile ? 'pan-y' : 'none';
       applyInteraction();
       mobilePillLayout = null;
@@ -331,18 +343,95 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       }
     };
 
-    const animateCam = (fromPos, fromTarget, toPos, toTarget, duration, onDone) => {
+    // Lens shift (px, + = right / down): moves the image on the canvas
+    // without turning the camera (off-axis frustum, see setViewOffset), so
+    // the overview isn't distorted where it sits — beside the text column on
+    // desktop, below the step text on mobile.
+    const lens = { x: 0, y: 0 };
+    const applyLens = () => {
+      const cw = container.clientWidth, ch = container.clientHeight;
+      if (!lens.x && !lens.y) camera.clearViewOffset();
+      else camera.setViewOffset(cw, ch, -lens.x, -lens.y, cw, ch);
+    };
+    const overviewLens = () => (mq.matches
+      ? { x: 0, y: viewShiftTarget }
+      : { x: container.clientWidth * (DESKTOP_SYSTEM_X - 0.5), y: 0 });
+
+    // Where `point` lands on screen (NDC, lens included) for the camera as is
+    const ndcOf = (point) => {
+      camera.updateMatrixWorld();
+      const p = point.clone().project(camera);
+      return new THREE.Vector2(p.x, p.y);
+    };
+
+    // Turns the camera (where it stands) so that `point` lands at `ndc`:
+    // a few correction passes on the look-at point, written to `target`.
+    const aimAt = (point, ndc, target) => {
+      target.copy(point);
+      const right = new THREE.Vector3();
+      const up    = new THREE.Vector3();
+      for (let k = 0; k < 4; k++) {
+        camera.lookAt(target);
+        const p = ndcOf(point);
+        const dist = camera.position.distanceTo(target);
+        right.setFromMatrixColumn(camera.matrixWorld, 0);
+        up.setFromMatrixColumn(camera.matrixWorld, 1);
+        target
+          .addScaledVector(right, (p.x - ndc.x) * TAN_HALF_FOV * camera.aspect * dist)
+          .addScaledVector(up,    (p.y - ndc.y) * TAN_HALF_FOV * dist);
+      }
+    };
+
+    // Where `point` lands (NDC) once the camera stands at `pos`, looks at
+    // `target` and has the lens shift `toLens`
+    const ndcAtPose = (point, pos, target, toLens) => {
+      const cw = container.clientWidth, ch = container.clientHeight;
+      const endCam = camera.clone();
+      endCam.position.copy(pos);
+      endCam.lookAt(target);
+      endCam.setViewOffset(cw, ch, -toLens.x, -toLens.y, cw, ch);
+      endCam.updateMatrixWorld();
+      const p = point.clone().project(endCam);
+      return new THREE.Vector2(p.x, p.y);
+    };
+
+    // focus (optional): { point, ndc } — instead of blending the look-at
+    // point, the camera is turned every frame so `point` glides in a straight
+    // line from where it is now to `ndc` (where toPos/toTarget put it).
+    // Blending look-at point and lens separately made the picture swing out
+    // and back. At the end the look-at point snaps to toTarget — same view,
+    // but the right pivot for dragging (the corrected point lies on the
+    // same line of sight, just at another depth).
+    let camAnimId = 0;
+    const animateCam = (fromPos, fromTarget, toPos, toTarget, duration, onDone, toLens = overviewLens(), focus = null) => {
+      const id = ++camAnimId;   // a newer animation takes over
       const startTime = performance.now();
+      const fromLens = { ...lens };
+      const fromNdc  = focus && ndcOf(focus.point);
+      // Only for a point on screen — far off it the correction can't settle
+      if (fromNdc && (Math.abs(fromNdc.x) > 1.2 || Math.abs(fromNdc.y) > 1.2)) focus = null;
+      const ndc      = new THREE.Vector2();
       controls.enabled = false;
       animating = true;
       const tick = () => {
+        if (id !== camAnimId) return;
         const t = Math.min((performance.now() - startTime) / duration, 1);
         const e = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
         camera.position.lerpVectors(fromPos, toPos, e);
-        controls.target.lerpVectors(fromTarget, toTarget, e);
+        lens.x = fromLens.x + (toLens.x - fromLens.x) * e;
+        lens.y = fromLens.y + (toLens.y - fromLens.y) * e;
+        applyLens();
+        if (focus) aimAt(focus.point, ndc.lerpVectors(fromNdc, focus.ndc, e), controls.target);
+        else controls.target.lerpVectors(fromTarget, toTarget, e);
         controls.update();
         if (t < 1) requestAnimationFrame(tick);
-        else { controls.enabled = true; animating = false; if (onDone) onDone(); }
+        else {
+          controls.target.copy(toTarget);
+          controls.update();
+          controls.enabled = true;
+          animating = false;
+          if (onDone) onDone();
+        }
       };
       tick();
     };
@@ -360,23 +449,29 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       const distance = newCamPos.distanceTo(targetPos);
       // Mobile: the card covers the top instead — keep the planet centered
       // horizontally and aim slightly above it so it sits underneath.
-      let newTarget;
+      let newTarget, toLens, focus = null;
       if (mq.matches) {
         // Lift (in units of distance) that lands the planet at planetScreenY(),
-        // on top of the view offset that already shifts everything down.
+        // on top of the lens shift that already moves everything down.
         const cH   = container.clientHeight;
         const lift = (planetScreenY() - cH / 2 - viewShiftTarget) * 2 * TAN_HALF_FOV / cH;
         const upVec = new THREE.Vector3().crossVectors(rightVec, forward).normalize();
         newTarget = targetPos.clone().add(upVec.multiplyScalar(distance * lift));
+        toLens = overviewLens();
       } else {
         newTarget = targetPos.clone().sub(rightVec.multiplyScalar(distance * 0.42));
+        toLens = { x: 0, y: 0 };
+        // Coming from the overview (lens shifted). Planet to planet, the lens
+        // stays put and the plain blend is smooth.
+        if (lens.x) focus = { point: targetPos, ndc: ndcAtPose(targetPos, newCamPos, newTarget, toLens) };
       }
+      focusedPlanetPos = targetPos;
       pillCamPose = { pos: newCamPos, target: newTarget };
-      animateCam(camera.position.clone(), controls.target.clone(), newCamPos, newTarget, 900);
+      animateCam(camera.position.clone(), controls.target.clone(), newCamPos, newTarget, 900, undefined, toLens, focus);
     };
 
-    // Mobile: middle of the free space between the text card and the planet
-    // arrows (read at call time — the card has just re-rendered for the
+    // Mobile: middle of the free space between the text card and the screen
+    // bottom (read at call time — the card has just re-rendered for the
     // newly selected planet).
     const topInset      = () => topInsetRef?.current?.offsetHeight ?? 0;
 
@@ -385,7 +480,6 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
     // per step — but never less than MOBILE_VIEW_SHIFT. Eased towards the
     // target in the render loop. Frozen while a planet is open, since
     // moveTo's framing is computed against it.
-    let viewShift = 0;
     let viewShiftTarget = 0;
     const updateViewShift = () => {
       if (!mq.matches || selectedPlanetRef.current !== null) return;
@@ -397,12 +491,56 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       return inset + (container.clientHeight - inset - MOBILE_NAV_SPACE) / 2;
     };
 
+    // Desktop, back from a planet: that planet (it's on screen, unlike the
+    // sun) glides straight to its place in the overview
+    let focusedPlanetPos = null;
     const resetCamera = () => {
-      animateCam(camera.position.clone(), controls.target.clone(), defaultCamPos.clone(), defaultTarget.clone(), 900);
+      const toLens = overviewLens();
+      let focus = null;
+      if (!mq.matches && focusedPlanetPos && toLens.x !== lens.x) {
+        focus = { point: focusedPlanetPos, ndc: ndcAtPose(focusedPlanetPos, defaultCamPos, defaultTarget, toLens) };
+      }
+      focusedPlanetPos = null;
+      animateCam(camera.position.clone(), controls.target.clone(), defaultCamPos.clone(), defaultTarget.clone(), 900, undefined, toLens, focus);
     };
 
     // ── Scene step transitions ────────────────────────────────────────────────
     let currentStep = -1;
+
+    // Planets appear once: one after another the first time step 2 is
+    // reached. They then stay through step 1 (so scrolling back and forth
+    // around the step boundary doesn't make them vanish and fade in again)
+    // and only hide at step 0; coming back from there, they fade in together.
+    let planetsRevealed = false;
+    // Back from step 2 into step 1: each planet fades out (and back in)
+    // together with its ring, see setStep1Progress
+    let planetsFollowRings = false;
+    let planetFades = [];   // pending timers / running fades, cancelled on any change
+
+    const stopPlanetFades = () => {
+      planetFades.forEach(stop => stop());
+      planetFades = [];
+    };
+
+    const hidePlanets = () => {
+      stopPlanetFades();
+      hotspotMeshes.forEach(m => { m.visible = false; m.material.opacity = 0; });
+    };
+
+    const showPlanets = () => {
+      stopPlanetFades();
+      const stagger = planetsRevealed ? 0 : 200;
+      planetsRevealed = true;
+      hotspotMeshes.forEach((m, i) => {
+        if (m.visible && m.material.opacity >= 1) return;
+        m.visible = true;
+        const from = m.material.opacity;
+        const timer = setTimeout(() => {
+          planetFades.push(fadeMat(m.material, from, 1, 500));
+        }, i * stagger);
+        planetFades.push(() => clearTimeout(timer));
+      });
+    };
 
     const transitionToStep = (newStep) => {
       const prev = currentStep;
@@ -411,7 +549,8 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       if (newStep === 0) {
         ringMeshes[0].material.opacity = 0.55;
         [1, 2, 3].forEach(ri => { ringMeshes[ri].material.opacity = 0; });
-        hotspotMeshes.forEach(m => { m.visible = false; m.material.opacity = 0; });
+        planetsFollowRings = false;
+        hidePlanets();
         selectedPlanetRef.current = null;
         onPlanetClickRef.current?.(null);
         controls.autoRotate   = true;
@@ -424,8 +563,10 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
         controls.enableZoom   = false;
         controls.enableRotate = false;
         if (prev >= 2) {
-          // Backward from step 2: hide planets; rings driven by step1Progress
-          hotspotMeshes.forEach(m => { m.visible = false; m.material.opacity = 0; });
+          // Backward from step 2: rings and their planets driven by
+          // step1Progress (the inner planet stays, like its ring)
+          stopPlanetFades();
+          planetsFollowRings = true;
           selectedPlanetRef.current = null;
           onPlanetClickRef.current?.(null);
           resetCamera();
@@ -435,18 +576,19 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       } else if (newStep === 2) {
         controls.autoRotate   = false;
         ringMeshes.forEach(r => { r.material.opacity = 0.55; });
-        if (prev < 2) {
-          hotspotMeshes.forEach((m, i) => {
-            m.visible = true;
-            setTimeout(() => fadeMat(m.material, 0, 1, 500), i * 200);
-          });
-        }
+        planetsFollowRings = false;
+        if (prev < 2) showPlanets();
         selectedPlanetRef.current = null;
         applyInteraction();
         onPlanetClickRef.current?.(null);
         // Snap camera to front-facing default instantly — no animation to avoid spin
+        camAnimId++;
+        animating = false;
+        controls.enabled = true;
         camera.position.copy(defaultCamPos);
         controls.target.copy(defaultTarget);
+        Object.assign(lens, overviewLens());
+        applyLens();
         controls.update();
 
       } else if (newStep === 3) {
@@ -479,8 +621,13 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
     const setStep1Progress = (p) => {
       if (currentStep !== 1) return;
       [1, 2, 3].forEach((ri, idx) => {
-        const opacity = Math.max(0, Math.min(1, (p - idx / 3) * 3)) * 0.55;
-        ringMeshes[ri].material.opacity = opacity;
+        const shown = Math.max(0, Math.min(1, (p - idx / 3) * 3));
+        ringMeshes[ri].material.opacity = shown * 0.55;
+        if (planetsFollowRings) {
+          const planet = hotspotMeshes[ri];
+          planet.material.opacity = shown;
+          planet.visible = shown > 0;
+        }
       });
     };
 
@@ -492,16 +639,16 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
 
     const handleClick = (event) => {
       if (currentStep < 2) return;
+      if (pointerDownAt && Math.hypot(event.clientX - pointerDownAt.x, event.clientY - pointerDownAt.y) > 5) return;
       const rect = canvas.getBoundingClientRect();
       mouse.x =  ((event.clientX - rect.left) / rect.width)  * 2 - 1;
       mouse.y = -((event.clientY - rect.top)  / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
       const hits = raycaster.intersectObjects(hotspotMeshes.filter(m => m.visible));
+      // A click into empty space keeps the current view — the detail is
+      // closed with the planet nav (or by scrolling away)
       if (hits.length > 0) {
-        const idx = hotspotMeshes.indexOf(hits[0].object);
-        onPlanetClickRef.current?.(idx);
-      } else {
-        onPlanetClickRef.current?.(null);
+        onPlanetClickRef.current?.(hotspotMeshes.indexOf(hits[0].object));
       }
     };
     canvas.addEventListener('click', handleClick);
@@ -519,9 +666,9 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
 
       const anySelected = selectedPlanetRef.current !== null;
 
-      if (mq.matches && Math.abs(viewShiftTarget - viewShift) > 0.5) {
-        viewShift += (viewShiftTarget - viewShift) * Math.min(1, delta * 6);
-        camera.setViewOffset(container.clientWidth, container.clientHeight, 0, -viewShift, container.clientWidth, container.clientHeight);
+      if (mq.matches && !animating && !anySelected && Math.abs(viewShiftTarget - lens.y) > 0.5) {
+        lens.y += (viewShiftTarget - lens.y) * Math.min(1, delta * 6);
+        applyLens();
       }
 
       // Planets stay frozen at startAngle positions — no continuous orbit animation
@@ -621,6 +768,7 @@ export default function LabScene({ sceneStep = 0, step1Progress = 0, selectedPla
       environment.dispose();
       ringGeometries.forEach(g => g.dispose());
       ringMaterials.forEach(m => m.dispose());
+      stopPlanetFades();
       hotspotMeshes.forEach(m => { m.geometry.dispose(); m.material.dispose(); });
       sunMat.dispose(); sunGeo.dispose();
       sceneApiRef.current = null;

@@ -8,7 +8,7 @@
   top: 0;
   height: 100vh;
   overflow: hidden;
-  background: #06060a;
+  background: #121212;
 }
 
 /* ── Background (photo + color slot), slides right during phase 1 ───────── */
@@ -54,14 +54,14 @@
 .teaserSlot {
   overflow: hidden;
   position: relative;
-  background: #BAA2F9;
+  background: #121212;
 }
 
-/* ── "direkt zu" jump points ────────────────────────────────────────────── */
+/* ── Jump points ────────────────────────────────────────────────────────── */
 .jump {
   display: flex;
   flex-direction: column;
-  color: #0a0a0a;
+  color: #ffffff;
   text-align: left;
 }
 
@@ -81,16 +81,6 @@
   display: none;
 }
 
-.jumpLabel {
-  composes: caps from '../typography.module.css';
-  margin-bottom: 14px;
-  color: #0a0a0a;
-}
-
-.jumpList {
-  border-top: 1px solid #0a0a0a;
-}
-
 /* Custom size (between h4 and h3, grows with the viewport): the size the
    list had before the Figma text styles — 18px on phones up to 26px. */
 .jumpItem {
@@ -101,9 +91,8 @@
   align-items: center;
   gap: 18px;
   width: 100%;
-  padding: clamp(9px, 1.6vh, 13px) 0;
+  padding: clamp(10px, 2vh, 20px) 0;
   border: 0;
-  border-bottom: 1px solid #0a0a0a;
   background: none;
   color: inherit;
   text-align: left;
@@ -111,33 +100,11 @@
   cursor: pointer;
 }
 
-/* Mini planet: a dot that gains a (solid) orbit ring on hover */
-.jumpDot {
-  position: relative;
-  display: grid;
-  place-items: center;
+/* Service symbol, 40px like in Figma */
+.jumpIcon {
   flex: none;
-  width: 22px;
-  height: 22px;
-}
-
-.jumpDot::before {
-  content: '';
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #0a0a0a;
-}
-
-.jumpDot::after {
-  content: '';
-  position: absolute;
-  inset: 1px -6px;
-  border: 1.2px solid #0a0a0a;
-  border-radius: 50%;
-  transform: rotate(-18deg);
-  opacity: 0;
-  transition: opacity 0.2s;
+  width: 40px;
+  height: 40px;
 }
 
 .jumpArrow {
@@ -145,10 +112,6 @@
   margin-left: auto;
   margin-right: 8px;
   transition: transform 0.2s;
-}
-
-.jumpItem:hover .jumpDot::after {
-  opacity: 1;
 }
 
 .jumpItem:hover .jumpArrow {
@@ -191,7 +154,7 @@
   composes: h2 from '../typography.module.css';
   font-size: calc(var(--h2-size) + var(--p1, 0) * 6px);
   margin: 0 0 20px;
-  color: #0a0a0a;
+  color: #121212;
 }
 
 .panelDesc {
@@ -221,30 +184,29 @@
 }
 
 .panelTitle {
-  composes: h3 from '../typography.module.css';
+  composes: h4 from '../typography.module.css';
   margin: 0;
-  color: #0a0a0a;
+  color: #121212;
 }
 
 /* ── Arrow indicator ────────────────────────────────────────────────────── */
+/* Just the arrow, as big as the jump-list arrows (18px); padding keeps the
+   tap target */
 .indicator {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(0, 0, 0, 0.5);
+  padding: 8px;
+  border: none;
   background: transparent;
-  color: #0a0a0a;
+  color: #121212;
   cursor: pointer;
   flex-shrink: 0;
-  transition: border-color 0.2s, background 0.2s;
+  transition: transform 0.2s;
 }
 
 .indicator:hover {
-  border-color: rgba(0, 0, 0, 0.9);
-  background: rgba(0, 0, 0, 0.05);
+  transform: translateY(4px);
 }
 
 /* ── Mobile: no scroll effect — the stage is a plain white section in the
@@ -307,16 +269,17 @@
     display: flex;
     width: 100%;
     margin-top: 28px;
-    padding: 18px 18px 6px;
+    padding: 8px 18px;
     border-radius: var(--radius-card);
-    background: #BAA2F9;
+    background: #121212;
   }
 
   .jumpMobile .jumpItem {
     gap: 12px;
   }
 
-  .jumpMobile .jumpItem:last-child {
-    border-bottom: 0;
+  .jumpMobile .jumpIcon {
+    width: 28px;
+    height: 28px;
   }
 }

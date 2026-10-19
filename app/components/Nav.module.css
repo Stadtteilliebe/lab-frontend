@@ -43,7 +43,7 @@
    but the links are hidden there anyway). */
 .link,
 .brand {
-  color: #0a0a0a;
+  color: #121212;
   text-decoration: none;
 }
 
@@ -73,7 +73,7 @@
 .contactButton {
   padding: 11px 22px;
   background: #ffffff;
-  color: #0a0a0a;
+  color: #121212;
   border-radius: 999px;
   /* Button: no Figma text style — same as "Planeten ansehen" */
   font-family: var(--font-family);
@@ -86,6 +86,20 @@
 
 .contactButton:hover {
   opacity: 0.75;
+}
+
+/* ── Service subpages: brand on black, links on the coloured half ─────── */
+.service .brand {
+  color: #ffffff;
+}
+
+.service .right .link {
+  color: #121212;
+}
+
+.service .contactButton {
+  background: #9B5DE5;
+  color: #ffffff;
 }
 
 /* ── Sandwich menu (mobile only) ─────────────────────────────────────────── */
@@ -107,7 +121,7 @@
 .burger span {
   width: 16px;
   height: 1.5px;
-  background: #0a0a0a;
+  background: #121212;
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
@@ -127,7 +141,7 @@
    query because `composes` can't be nested. */
 .mobileLink {
   composes: h1 from '../typography.module.css';
-  color: #0a0a0a;
+  color: #121212;
   text-decoration: none;
   text-align: left;
 }
@@ -148,13 +162,39 @@
 
   .contactButton {
     padding: 9px 18px;
-    background: #0a0a0a;
+    background: #121212;
     color: #ffffff;
     font-size: 14px;
   }
 
   .burger {
     display: flex;
+  }
+
+  /* Subpage: the bar sits over the black hero half */
+  .service .burger {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .service .burger span {
+    background: #ffffff;
+  }
+
+  .service .contactButton {
+    background: #9B5DE5;
+  }
+
+  /* …until the white menu opens over it */
+  .service.menuOpen .brand {
+    color: #121212;
+  }
+
+  .service.menuOpen .burger {
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  .service.menuOpen .burger span {
+    background: #121212;
   }
 
   /* Full-width panel below the bar, continuing its white — links line up

@@ -2,7 +2,7 @@
   position: relative;
   width: 100%;
   height: 100%;
-  background: #06060a;
+  background: #121212;
   overflow: hidden;
 }
 
@@ -30,19 +30,21 @@
 }
 
 /* Small pill labels scattered around the scene while a planet is
-   selected, naming the services within that category. Caps style (14px,
-   white). */
+   selected, naming the services within that category. Custom (Figma):
+   Averta regular 14/Auto, white on #1F1F23, 27px high (5px padding top
+   and bottom), 15px left and right, no outline. */
 .subLabel {
-  composes: caps from '../typography.module.css';
   position: absolute;
   top: 0;
   left: 0;
   opacity: 0;
-  padding: 3px 16px;
+  padding: 5px 15px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(6, 6, 10, 0.55);
-  backdrop-filter: blur(2px);
+  background: #1F1F23;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: normal;
   color: #ffffff;
   pointer-events: none;
   white-space: nowrap;
@@ -65,9 +67,5 @@
 @media (max-width: 768px) {
   .orbitLabel {
     font-size: 12px;
-  }
-
-  .subLabel {
-    padding: 2px 14px;
   }
 }
