@@ -58,9 +58,19 @@
 }
 
 /* One corner radius for every card: planet cards, project cards, the lilac
-   boxes */
+   boxes. Padding and symbol size shared by the cards with a service symbol
+   (planet card, service finder card). */
 :root {
   --radius-card: 10px;
+  --card-padding: 30px;
+  --card-icon: 40px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --card-padding: 22px;
+    --card-icon: 24px;
+  }
 }
 
 * {

@@ -1,0 +1,119 @@
+/* Two halves, one screen high: black text half, coloured symbol half. The
+   nav lies over both (Nav variant "service"). */
+.stage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  min-height: 100svh;
+  background: #121212;
+  color: #ffffff;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 120px clamp(24px, 5.5vw, 80px) 80px;
+}
+
+.title {
+  composes: h1 from '../typography.module.css';
+  max-width: 560px;
+}
+
+.text {
+  composes: text from '../typography.module.css';
+  max-width: 560px;
+  margin-top: 32px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 44px;
+}
+
+/* Same buttons as the footer CTA, a step bigger as on the stage */
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 52px;
+  padding: 0 30px;
+  border: 1px solid #ffffff;
+  border-radius: 999px;
+  font-family: var(--font-family);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.primary {
+  background: #ffffff;
+  color: #121212;
+}
+
+.primary:hover {
+  opacity: 0.85;
+}
+
+.secondary {
+  color: #ffffff;
+}
+
+.secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* 320px at 1440 wide, as in the design */
+.symbol {
+  width: clamp(160px, 22vw, 400px);
+  height: auto;
+}
+
+@media (max-width: 768px) {
+  .stage {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .content {
+    padding: 112px 20px 48px;
+  }
+
+  .text {
+    margin-top: 20px;
+  }
+
+  .buttons {
+    margin-top: 28px;
+  }
+
+  .primary,
+  .secondary {
+    height: 40px;
+    padding: 0 18px;
+    font-size: 14px;
+  }
+
+  .visual {
+    aspect-ratio: 1;
+  }
+
+  .symbol {
+    width: 45%;
+  }
+}

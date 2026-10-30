@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from 'react';
 
-// Degrees per scrolled pixel — a slow turn, about a quarter turn per screen
-const DEG_PER_PX = 0.1;
+// Tilt at the top/bottom edge of the viewport — upright in the middle, so
+// it rocks a little while passing through instead of turning on its head
+const MAX_TILT = 20;
 
 export default function Sticker({ className }) {
   const ref = useRef(null);
@@ -14,7 +15,13 @@ export default function Sticker({ className }) {
     const onScroll = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        ref.current?.style.setProperty('--turn', `${window.scrollY * DEG_PER_PX}deg`);
+        const el = ref.current;
+        if (!el) return;
+        // -1 at the bottom edge … 1 at the top edge of the viewport
+        const rect = el.getBoundingClientRect();
+        const pos = 1 - (2 * (rect.top + rect.height / 2)) / window.innerHeight;
+        const tilt = Math.max(-1, Math.min(1, pos)) * MAX_TILT;
+        el.style.setProperty('--turn', `${tilt}deg`);
       });
     };
     onScroll();

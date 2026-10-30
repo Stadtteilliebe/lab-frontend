@@ -1,5 +1,5 @@
 import Arrow from './Arrow';
-import { hotspotsData } from './services';
+import ServiceIcon from './ServiceIcon';
 import styles from './Projects.module.css';
 
 // Projects that combine several services (Notion: "Projekte, in denen alles
@@ -9,19 +9,19 @@ const PROJECTS = [
   {
     client: 'Gasthaus Vetternwirtschaft',
     title: 'Tradition neu serviert',
-    services: ['Identity', 'Experience', 'Engineering'],
+    services: ['Identity', 'Engineering'],
     href: 'https://stadtteilliebe.de/projekte/gasthaus-vetternwirtschaft',
   },
   {
     client: 'HUB:DISRUPT',
     title: 'Let’s get disruptive',
-    services: ['Strategy', 'Identity', 'Experience', 'Engineering'],
+    services: ['Strategy', 'Identity'],
     href: 'https://stadtteilliebe.de/projekte/hub-disrupt',
   },
   {
     client: 'NERDFIELD by DevBoost',
     title: 'Talk nerdy to me',
-    services: ['Strategy', 'Identity', 'Experience'],
+    services: ['Experience'],
     href: 'https://stadtteilliebe.de/projekte/nerdfield',
   },
 ];
@@ -37,14 +37,10 @@ export default function Projects() {
               <img className={styles.image} src="/images/hero-workshop.jpg" alt="" />
             </div>
             <div className={styles.body}>
-              <ul className={styles.tags}>
+              <ul className={styles.icons} aria-label={project.services.join(', ')}>
                 {project.services.map(title => (
-                  <li
-                    key={title}
-                    className={styles.tag}
-                    style={{ background: hotspotsData.find(h => h.title === title).color }}
-                  >
-                    {title}
+                  <li key={title}>
+                    <ServiceIcon name={title} size={36} className={styles.icon} />
                   </li>
                 ))}
               </ul>

@@ -73,7 +73,7 @@
      alone doesn't reliably shrink to that with pre-line text in a flex item. */
   max-width: min(520px, 100%);
   border-radius: var(--radius-card);
-  padding: 30px;
+  padding: var(--card-padding);
   background: #121212;
   /* Hairline like the orbit rings: WebGL lines are one canvas pixel, i.e.
      half a CSS pixel on retina screens (LabScene caps the pixel ratio at 2) */
@@ -161,8 +161,8 @@
 /* Service symbol above the planet card heading, 40px like in Figma */
 .cardIcon {
   display: block;
-  width: 40px;
-  height: 40px;
+  width: var(--card-icon);
+  height: var(--card-icon);
   margin-bottom: 20px;
 }
 
@@ -359,7 +359,6 @@
   .textCard {
     width: 100%;
     max-width: 100%;
-    padding: 20px;
   }
 
   /* Planet open: the card sits at the bottom of the screen, whole, 10px
@@ -379,7 +378,6 @@
      0.5px border collapses to one device pixel, thinner than the rings,
      which the canvas draws at 2× and the screen scales up to 1.5 px. */
   .leftColumnSheet .textCard {
-    padding: 22px;
     border: 0.67px solid rgba(255, 255, 255, 0.55);
   }
 
@@ -392,8 +390,6 @@
 
   .cardHead .cardIcon {
     flex: none;
-    width: 24px;
-    height: 24px;
     margin: 0;
   }
 

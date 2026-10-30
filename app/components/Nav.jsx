@@ -3,17 +3,19 @@
 import { useEffect, useState } from 'react';
 import styles from './Nav.module.css';
 
-const LINKS = [
+// Leistungen: on the overview to the top of the page (the stage introduces
+// the services), on a subpage back to the overview
+const linksFor = variant => [
   { label: 'Projekte', href: 'https://stadtteilliebe.de/projekte' },
-  // To the top of the page — the stage introduces the services
-  { label: 'Leistungen', href: '#top' },
+  { label: 'Leistungen', href: variant === 'service' ? '/' : '#top' },
   { label: 'Merch', href: 'https://stadtteilliebe.de/merch' },
 ];
 const CONTACT = { label: 'Kontakt', href: 'https://stadtteilliebe.de/kontakt' };
 
 // variant "service": service subpages — brand over the black half, links
-// over the coloured half, lilac contact button.
+// and contact button over the coloured half.
 export default function Nav({ variant }) {
+  const LINKS = linksFor(variant);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 

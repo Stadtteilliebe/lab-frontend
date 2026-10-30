@@ -11,14 +11,13 @@ function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 // Share of the stage's scroll range before the white panel starts to grow.
 const NAV_LEAD = 0.06;
 
-// Jump points — each leads to the service's subpage (see href
-// in hotspotsData; no link yet until the subpages exist).
+// Jump points — each leads to the service's subpage (href in hotspotsData).
 function JumpList({ className = '' }) {
   return (
     <div className={`${styles.jump} ${className}`}>
       <div className={styles.jumpList}>
         {hotspotsData.map(h => (
-          <a key={h.title} className={styles.jumpItem} href={h.href ?? undefined}>
+          <a key={h.title} className={styles.jumpItem} href={h.href}>
             <ServiceIcon name={h.title} className={styles.jumpIcon} />
             <span className={styles.jumpTitle}>{h.title}</span>
             <Arrow className={styles.jumpArrow} width={18} />

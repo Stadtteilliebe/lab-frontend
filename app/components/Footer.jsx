@@ -10,8 +10,8 @@ const COLUMNS = [
     label: 'Links',
     links: [
       { label: 'Home', href: 'https://stadtteilliebe.de' },
-      // To the top of the page — the stage introduces the services
-      { label: 'Leistungen', href: '#top' },
+      // The overview — also from the subpages
+      { label: 'Leistungen', href: '/' },
       { label: 'Projekte', href: 'https://stadtteilliebe.de/projekte' },
       { label: 'Merch', href: 'https://stadtteilliebe.de/merch' },
     ],

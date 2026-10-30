@@ -1,0 +1,91 @@
+/* Entrance animations of the service symbols (subpage stage, planet card,
+   service finder), played once.
+   Each moves the symbol the way it's built: Strategy draws its path,
+   Identity spins in and keeps turning slowly, Experience stacks its two
+   halves, Engineering builds up triangle by triangle. Held at the first
+   frame until the symbol is in view (.inView, see StageSymbol.jsx). */
+.symbol {
+  display: block;
+  overflow: visible;
+}
+
+.symbol:not(.inView) * {
+  animation-play-state: paused;
+}
+
+/* ── Strategy: the line draws itself from the top left ──────────────────── */
+.line {
+  stroke-dasharray: 1;
+  animation: draw 1.6s cubic-bezier(0.65, 0, 0.35, 1) 0.2s both;
+}
+
+@keyframes draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* ── Identity: fades in at full size while turning, slows down into
+   a slow turn for good ─────────────────────────────────────────────────── */
+.star {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation:
+    spinIn 2.4s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both,
+    turn 60s linear 2.6s infinite;
+}
+
+@keyframes spinIn {
+  from {
+    opacity: 0;
+    transform: rotate(-120deg);
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+@keyframes turn {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Experience: the halves rise from their flat edge, bottom then top ──── */
+.half {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.half:nth-child(1) { animation-delay: 0.2s; }
+.half:nth-child(2) { animation-delay: 0.55s; }
+
+@keyframes rise {
+  from { transform: scaleY(0); }
+}
+
+/* ── Engineering: triangles unfold one by one from their right angle ────── */
+.triangle {
+  transform-box: fill-box;
+  transform-origin: 100% 0;
+  animation: unfold 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.triangle:nth-child(1) { animation-delay: 0.2s; }
+.triangle:nth-child(2) { animation-delay: 0.38s; }
+.triangle:nth-child(3) { animation-delay: 0.56s; }
+.triangle:nth-child(4) { animation-delay: 0.74s; }
+
+@keyframes unfold {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line,
+  .star,
+  .half,
+  .triangle {
+    animation: none;
+  }
+}

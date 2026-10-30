@@ -1,0 +1,6 @@
+/* TODO: the subpage's content goes here — for now an empty white gap that
+   sets the stage apart from the footer */
+.gap {
+  height: 600px;
+  background: #ffffff;
+}

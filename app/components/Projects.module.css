@@ -44,35 +44,21 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  min-height: 190px;
-  padding: 24px;
+  padding: 30px;
 }
 
-/* Service pills in the service colours. Custom: same size as the planet
-   pills (LabScene .subLabel) — Averta regular 14/Auto, 5px 15px padding —
-   with a thin dark outline (inset, so the height stays 27px). Room for
-   two rows, so client and title line up across the cards. */
-.tags {
+/* Service symbols in the service colours, 36×36 */
+.icons {
   display: flex;
   flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 8px;
-  min-height: 62px;
-  margin: 0 0 32px;
+  gap: 16px;
+  margin: 0 0 56px;
   padding: 0;
   list-style: none;
 }
 
-.tag {
-  padding: 5px 15px;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px #121212;
-  font-family: var(--font-family);
-  font-size: 14px;
-  font-weight: 400;
-  line-height: normal;
-  color: #121212;
-  white-space: nowrap;
+.icon {
+  display: block;
 }
 
 /* Custom: client name smaller than the text style (as in the design) */
@@ -110,8 +96,7 @@
     padding: 20px;
   }
 
-  .tags {
-    min-height: 0;
-    margin-bottom: 24px;
+  .icons {
+    margin-bottom: 32px;
   }
 }

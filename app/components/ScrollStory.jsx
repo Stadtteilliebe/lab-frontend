@@ -5,6 +5,7 @@ import Arrow from './Arrow';
 import LabScene from './LabScene';
 import { hotspotsData } from './services';
 import ServiceIcon from './ServiceIcon';
+import StageSymbol from './StageSymbol';
 import styles from './ScrollStory.module.css';
 
 const STORY_STEPS = [
@@ -289,14 +290,15 @@ export default function ScrollStory() {
             <div key={clickedIndex} className={`${styles.textContent} ${styles.textCard}`}>
               {/* Mobile: symbol and title side by side */}
               <div className={styles.cardHead}>
-                <ServiceIcon name={planet.title} className={styles.cardIcon} />
+                {/* Animated symbol — replays with every planet (card is keyed) */}
+                <StageSymbol name={planet.title} color={planet.color} className={styles.cardIcon} />
                 {/* Planet teasers sit one level below the step headings */}
                 <StepTitle as="h3" title={planet.heading} />
               </div>
               <p className={styles.stepText}>{planet.text}</p>
               <p className={`${styles.stepText} ${styles.stepFit}`}>Sinnvoll, wenn: {planet.fit}.</p>
               <div className={styles.cardFooter}>
-                <a className={styles.moreButton} href={planet.href ?? undefined}>
+                <a className={styles.moreButton} href={planet.href}>
                   Mehr zu {planet.title}
                 </a>
                 <PlanetNav index={clickedIndex} setIndex={setClickedIndex} />

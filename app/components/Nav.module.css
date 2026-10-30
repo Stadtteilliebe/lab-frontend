@@ -98,7 +98,7 @@
 }
 
 .service .contactButton {
-  background: #9B5DE5;
+  background: #121212;
   color: #ffffff;
 }
 
@@ -180,8 +180,10 @@
     background: #ffffff;
   }
 
+  /* White on the black half */
   .service .contactButton {
-    background: #9B5DE5;
+    background: #ffffff;
+    color: #121212;
   }
 
   /* …until the white menu opens over it */
