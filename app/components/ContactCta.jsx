@@ -1,17 +1,19 @@
+import Sticker from './Sticker';
 import styles from './ContactCta.module.css';
 
-// Closing CTA (Notion: "Wo fängt dein Projekt an?"). The sticker divider
-// into the footer is part of Footer.
+// Closing CTA, the top of the dark footer block (rendered by Footer). The
+// sticker sits on its top edge, half over the white page above.
 // TODO: booking link for the 15-min call — not on stadtteilliebe.de yet.
 const BOOKING_HREF = null;
 
 export default function ContactCta() {
   return (
     <section className={styles.section}>
-      <h2 className={styles.title}>Wo fängt dein Projekt an?</h2>
+      <Sticker className={styles.sticker} />
+      <h2 className={styles.title}>Bereit, mit deinem Projekt zu starten?</h2>
       <p className={styles.text}>
-        Erzähl uns kurz, wo du gerade stehst. Wir besprechen den Einstieg, der zu deinem Projekt
-        und deinem Budget passt.
+        Ob konkrete Anfrage oder erste Idee: Lass uns unverbindlich über den passenden Weg für
+        dein Projekt sprechen.
       </p>
       <div className={styles.buttons}>
         <a className={styles.primary} href="https://stadtteilliebe.de/kontakt">Nachricht schreiben</a>

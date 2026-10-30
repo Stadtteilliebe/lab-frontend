@@ -13,27 +13,12 @@
   padding: 0 clamp(20px, 5.5vw, 80px);
 }
 
-/* ── Sticker divider ────────────────────────────────────────────────────── */
-/* The drawing (1440 × 146) scaled to the full width at its own aspect
-   ratio, flush with both edges. Behind it the page turns from the white
-   above to the footer's dark where the stickers' lower edge sits in the
-   design (58% down). */
-.divider {
-  background: linear-gradient(to bottom, #ffffff 58%, #121212 58%);
-}
-
-.dividerImage {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
 /* ── Contact / Links / Connect / Legal ──────────────────────────────────── */
 .columns {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 32px;
-  margin-top: clamp(32px, 3.4vw, 48px);
+  margin-top: clamp(56px, 7.5vw, 110px);
 }
 
 .column {
@@ -105,17 +90,6 @@
 
   .label {
     margin-bottom: 10px;
-  }
-
-  /* Bigger drawing, centered — cut off on both sides instead of shrinking
-     to a thin strip */
-  .divider {
-    overflow: hidden;
-  }
-
-  .dividerImage {
-    width: 190%;
-    margin-left: -45%;
   }
 
   /* Two lines: "stadtteilliebe" (5.78em) is the longer one */

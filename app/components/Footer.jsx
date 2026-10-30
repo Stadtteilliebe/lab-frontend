@@ -1,3 +1,4 @@
+import ContactCta from './ContactCta';
 import styles from './Footer.module.css';
 
 const COLUMNS = [
@@ -21,7 +22,7 @@ const COLUMNS = [
     links: [
       { label: 'Instagram', href: 'https://www.instagram.com/stadtteilliebe/' },
       { label: 'LinkedIn', href: 'https://www.linkedin.com/company/stadtteilliebe/posts/' },
-      { label: 'Tiktok', href: 'https://www.tiktok.com/@stadtteilliebe' },
+      { label: 'TikTok', href: 'https://www.tiktok.com/@stadtteilliebe' },
     ],
   },
   {
@@ -37,11 +38,7 @@ const COLUMNS = [
 export default function Footer() {
   return (
     <footer className={styles.footer}>
-      {/* Sticker band across the white → dark edge: one drawing, scaled to
-          the full width — never tiled or stretched */}
-      <div className={styles.divider} aria-hidden="true">
-        <img className={styles.dividerImage} src="/images/footer-divider.svg" alt="" />
-      </div>
+      <ContactCta />
 
       <div className={styles.columns}>
         {COLUMNS.map(column => (

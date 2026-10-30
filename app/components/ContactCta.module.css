@@ -1,12 +1,26 @@
 .section {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  padding: clamp(48px, 6vw, 96px) clamp(20px, 5.5vw, 80px) clamp(64px, 9vw, 128px);
-  background: #ffffff;
-  color: #121212;
+  padding: clamp(80px, 11vw, 160px) clamp(20px, 5.5vw, 80px) clamp(64px, 7vw, 100px);
+  /* A shade lighter than the footer below it */
+  background: #1c1c1c;
+  color: #ffffff;
   text-align: center;
+}
+
+/* Centered on the top edge, 145px as drawn; turned by Sticker via --turn */
+.sticker {
+  position: absolute;
+  top: 0;
+  right: 14.5%;
+  z-index: 1;
+  width: 145px;
+  height: 145px;
+  transform: translateY(-50%) rotate(var(--turn, 0deg));
+  will-change: transform;
 }
 
 .title {
@@ -15,7 +29,7 @@
 
 .text {
   composes: text from '../typography.module.css';
-  max-width: 640px;
+  max-width: 780px;
 }
 
 .buttons {
@@ -44,10 +58,10 @@
   transition: opacity 0.2s, background 0.2s;
 }
 
-/* Purple from the stadtteilliebe CTA design */
 .primary {
-  background: #9B5EE7;
-  color: #ffffff;
+  border: 1.5px solid #ffffff;
+  background: #ffffff;
+  color: #121212;
 }
 
 .primary:hover {
@@ -55,15 +69,21 @@
 }
 
 .secondary {
-  border: 1.5px solid #121212;
-  color: #121212;
+  border: 1.5px solid #ffffff;
+  color: #ffffff;
 }
 
 .secondary:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 @media (max-width: 768px) {
+  .sticker {
+    right: 20px;
+    width: 96px;
+    height: 96px;
+  }
+
   .primary,
   .secondary {
     height: 36px;
